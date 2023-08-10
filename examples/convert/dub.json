@@ -1,0 +1,9 @@
+{
+    "name": "convert-color",
+    "description": "Example of usage",
+    "dependencies":
+    {
+      "colors": { "path": "../.." },
+      "intel-intrinsics": "~>1.0"
+    }
+}
