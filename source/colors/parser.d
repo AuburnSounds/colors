@@ -238,7 +238,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         }
     }
 
-    bool parseColorValue(out ubyte result, out string error) nothrow @nogc @trusted
+    bool parseColorValue(out float result, out string error) nothrow @nogc @trusted
     {
         double number;
         if (!parseNumber(&number, error))
@@ -248,23 +248,28 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         bool isPercentage = parseChar('%');
         if (isPercentage)
             number *= (255.0 / 100.0);
-        int c = cast(int)(0.5 + number); // TODO: spec says we should round towards infinity.
-        result = clamp0to255(c);
+
+        // No clamping!
+        // "Values outside these ranges are not invalid, but are clamped to the ranges defined 
+        /// here at computed-value time."
+        result = number;
         return true; 
     }
 
-    bool parseOpacity(out ubyte result, out string error) nothrow @nogc @trusted
+    bool parseOpacity(out float result, out string error) nothrow @nogc @trusted
     {
         double number;
         if (!parseNumber(&number, error))
         {
             return false;
         }
+
+        // "Values outside the range [0,1] are not invalid, but are clamped to that range when computed."
         bool isPercentage = parseChar('%');
         if (isPercentage)
             number *= 0.01;
-        int c = cast(int)(0.5 + number * 255.0);
-        result = clamp0to255(c);
+
+        result = number;
         return true;
     }
 
@@ -318,10 +323,15 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
 
     skipWhiteSpace();
 
-    ubyte red, green, blue, alpha = 255;
+    //ubyte red, green, blue, alpha = 255;
 
     if (parseChar('#'))
     {
+       int red = 255, 
+           green = 255,
+           blue = 255,
+           alpha = 255;
+
        int[8] digits;
        int numDigits = 0;
        for (int i = 0; i < 8; ++i)
@@ -353,9 +363,14 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
            error = "Expected 3, 4, 6 or 8 digit in hexadecimal color literal";
            return false;
        }
+       outColor = rgba(red, green, blue, alpha / 255.0f);
     }
     else if (parseString("gray"))
     {
+        float red = 255, 
+              green = 255,
+              blue = 255;
+        float alpha = 1.0f;
         
         skipWhiteSpace();
         if (!parseChar('('))
@@ -366,7 +381,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         else
         {
             skipWhiteSpace();
-            ubyte v;
+            float v;
             if (!parseColorValue(v, error))
                 return false;
             red = green = blue = v;
@@ -384,9 +399,14 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
                 return false;
             }
         }
+        outColor = rgba(red, green, blue, alpha);
     }
     else if (parseString("rgb"))
     {
+        float red = 255, 
+              green = 255,
+              blue = 255;
+        float alpha = 1.0f;
         bool hasAlpha = parseChar('a');
         if (!expectPunct('('))
         {
@@ -424,20 +444,19 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             error = "Expected , in color string";
             return false;
         }
+         outColor = rgba(red, green, blue, alpha);
     }
     else if (parseString("hsl"))
     {
         bool hasAlpha = parseChar('a');
         expectPunct('(');
 
+        float alpha = 1.0f;
         double hueDegrees;
         if (!parseHueInDegrees(hueDegrees, error))
             return false;
         
         // Convert to turns
-        double hueTurns = hueDegrees / 360.0;
-        hueTurns -= floor(hueTurns); // take remainder
-        double hue = 6.0 * hueTurns;        
         if (!expectPunct(','))
         {
             error = "Expected , in color string";
@@ -465,10 +484,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
                 return false;
         }
         expectPunct(')');
-        double[3] rgb = convertHSLtoRGB(hue, sat, light);
-        red   = clamp0to255( cast(int)(0.5 + 255.0 * rgb[0]) );
-        green = clamp0to255( cast(int)(0.5 + 255.0 * rgb[1]) );
-        blue  = clamp0to255( cast(int)(0.5 + 255.0 * rgb[2]) );
+        outColor = hsla(hueDegrees, sat, light, alpha / 255.0f);
     }
     else
     {
@@ -496,11 +512,12 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
                     if (namedColorKeywords[candidate].length == charPos)// found it, return as there are no duplicates
                     {
                         // If we have matched all the alpha of the only remaining candidate, we have found a named color
-                        uint rgba = namedColorValues[candidate];
-                        red   = (rgba >> 24) & 0xff;
-                        green = (rgba >> 16) & 0xff;
-                        blue  = (rgba >>  8) & 0xff;
-                        alpha = (rgba >>  0) & 0xff;
+                        uint uintColor = namedColorValues[candidate];
+                        int red   = (uintColor >> 24) & 0xff;
+                        int green = (uintColor >> 16) & 0xff;
+                        int blue  = (uintColor >>  8) & 0xff;
+                        int alpha = (uintColor >>  0) & 0xff;
+                        outColor = rgba(red / 255.0f, green / 255.0f, blue / 255.0f, alpha / 255.0f);
                         break matchloop;
                     }
                 }
@@ -550,7 +567,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         error = "Expected end of input at the end of color string";
         return false;
     }
-    outColor = rgba(red, green, blue, alpha);
+
     return true;
 }
 
