@@ -3,7 +3,7 @@
     "description": "Example of usage",
     "dependencies":
     {
-      "colors": { "path": "../.." },
-      "intel-intrinsics": "~>1.0"
+        "colors": { "path": "../.." },
+        "intel-intrinsics": "~>1.0"
     }
 }

@@ -4,6 +4,8 @@
 
     "description": "A color library that implement roughly CSS colors.",
 
-    "importPaths": ["source"],
-    "sourcePaths": ["source"]
+    "dependencies":
+    {
+        "dplug:core": "~>13.0"
+    }
 }
