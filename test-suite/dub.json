@@ -1,0 +1,10 @@
+{
+	"name": "test-suite",
+
+
+	"dependencies":
+	{
+		"colors": { "path": ".." },
+		"console-colors": "~>1.0"
+	}
+}
