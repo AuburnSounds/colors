@@ -73,6 +73,29 @@ nothrow:
     // Opacity value, represented from 0.0f (transparent) to 1.0f (opaque).
     float a; 
 
+    /// Converts the color to a quadruplet of R, G, B, A bytes.
+    ubyte[4] toSRGB()
+    {
+        final switch(colorSpace) with (Colorspace)
+        {
+            case srgb: assert(0);
+            case srgb_linear: assert(0);
+            case display_p3: assert(0);
+            case a98_rgb: assert(0);
+            case prophoto_rgb: assert(0);
+            case xyz: assert(0);
+            case xyz_D50: assert(0);
+            case xyz_D65: assert(0);
+            case hsl: assert(0);
+            case hwb: assert(0);
+            case lch: assert(0);
+            case oklch: assert(0);
+            case lab: assert(0);
+            case oklab: assert(0);
+        }
+
+    }
+
 private:
     Colorspace colorSpace;
 }
@@ -155,3 +178,4 @@ alias hsla = hsl;
 
 
 +/
+
