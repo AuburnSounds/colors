@@ -9,7 +9,7 @@ module colors.parser;
 
 import std.math: PI, floor;
 
-import dplug.core.string: convertStringToDouble; // To avoid reliance on libc locale!
+import core.stdc.string: strlen;
 
 import colors.types;
 import colors.conversions;
@@ -702,3 +702,176 @@ unittest
     // should work in CTFE
     static immutable RGBA color = parseHTMLColor("red");
 }
+
+
+
+// <copied from dplug:core to avoid a dependency>
+
+/// C-locale independent string to float parsing.
+/// Params:
+///     s Must be a zero-terminated string.
+///     mustConsumeEntireInput if true, check that s is entirely consumed by parsing the number.
+///     err: optional bool
+public double convertStringToDouble(const(char)* s, 
+                                    bool mustConsumeEntireInput,
+                                    bool* err) pure nothrow @nogc
+{
+    if (s is null)
+    {
+        if (err) *err = true;
+        return 0.0;
+    }
+
+    const(char)* end;
+    bool strtod_err = false;
+    double r = stb__clex_parse_number_literal(s, &end, &strtod_err, true);
+
+    if (strtod_err)
+    {
+        if (err) *err = true;
+        return 0.0;
+    }
+
+    if (mustConsumeEntireInput)
+    {
+        size_t len = strlen(s);
+        if (end != s + len)
+        {
+            if (err) *err = true; // did not consume whole string
+            return 0.0;
+        }
+    }
+
+    if (err) *err = false; // no error
+    return r;
+}
+
+private double stb__clex_parse_number_literal(const(char)* p, 
+                                              const(char)**q, 
+                                              bool* err,
+                                              bool allowFloat) pure nothrow @nogc
+{
+    const(char)* s = p;
+    double value=0;
+    int base=10;
+    int exponent=0;
+    int signMantissa = 1;
+
+    // Skip leading whitespace, like scanf and strtod do
+    while (true)
+    {
+        char ch = *p;
+        if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\f' || ch == '\r')
+        {
+            p += 1;
+        }
+        else
+            break;
+    }
+
+
+    if (*p == '-') 
+    {
+        signMantissa = -1;
+        p += 1;
+    } 
+    else if (*p == '+') 
+    {
+        p += 1;
+    }
+
+    if (*p == '0') 
+    {
+        if (p[1] == 'x' || p[1] == 'X') 
+        {
+            base=16;
+            p += 2;
+        }
+    }
+
+    for (;;) 
+    {
+        if (*p >= '0' && *p <= '9')
+            value = value*base + (*p++ - '0');
+        else if (base == 16 && *p >= 'a' && *p <= 'f')
+            value = value*base + 10 + (*p++ - 'a');
+        else if (base == 16 && *p >= 'A' && *p <= 'F')
+            value = value*base + 10 + (*p++ - 'A');
+        else
+            break;
+    }
+
+    if (allowFloat)
+    {
+        if (*p == '.') 
+        {
+            double pow, addend = 0;
+            ++p;
+            for (pow=1; ; pow*=base) 
+            {
+                if (*p >= '0' && *p <= '9')
+                    addend = addend*base + (*p++ - '0');
+                else if (base == 16 && *p >= 'a' && *p <= 'f')
+                    addend = addend*base + 10 + (*p++ - 'a');
+                else if (base == 16 && *p >= 'A' && *p <= 'F')
+                    addend = addend*base + 10 + (*p++ - 'A');
+                else
+                    break;
+            }
+            value += addend / pow;
+        }
+        if (base == 16) {
+            // exponent required for hex float literal, else it's an integer literal like 0x123
+            exponent = (*p == 'p' || *p == 'P');
+        } else
+            exponent = (*p == 'e' || *p == 'E');
+
+        if (exponent) 
+        {
+            int sign = p[1] == '-';
+            uint exponent2 = 0;
+            double power=1;
+            ++p;
+            if (*p == '-' || *p == '+')
+                ++p;
+            while (*p >= '0' && *p <= '9')
+                exponent2 = exponent2*10 + (*p++ - '0');
+
+            if (base == 16)
+                power = stb__clex_pow(2, exponent2);
+            else
+                power = stb__clex_pow(10, exponent2);
+            if (sign)
+                value /= power;
+            else
+                value *= power;
+        }
+    }
+
+    if (q) *q = p;
+    if (err) *err = false; // seen no error
+
+    if (signMantissa < 0)
+        value = -value;
+
+    if (!allowFloat)
+    {
+        // clamp and round to nearest integer
+        if (value > int.max) value = int.max;
+        if (value < int.min) value = int.min;
+    }    
+    return value;
+}
+
+private double stb__clex_pow(double base, uint exponent) pure nothrow @nogc
+{
+    double value=1;
+    for ( ; exponent; exponent >>= 1) {
+        if (exponent & 1)
+            value *= base;
+        base *= base;
+    }
+    return value;
+}
+
+// </copied from dplug:core to avoid a dependency>

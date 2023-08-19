@@ -11,39 +11,11 @@ nothrow @nogc @safe:
 import std.math;
 
 import colors.conversions;
+import colors.colorspace;
 
+nothrow @nogc @safe:
 
-/// The CSS Predefined Color Spaces.
-enum Colorspace
-{
-    /// The sRGB predefined color space defined below is the same as is used for legacy sRGB 
-    /// colors, such as rgb().
-    srgb,
-
-    /// The sRGB-linear predefined color space is the same as srgb except that the transfer 
-    /// function is linear-light (there is no gamma-encoding).
-    srgb_linear,
-
-    display_p3,
-
-    a98_rgb,
-
-    prophoto_rgb,
-
-    xyz,
-    xyz_D50,
-    xyz_D65,
-
-    hsl,
-    hwb,
-    lch,
-    oklch,
-    lab,
-    oklab
-}
-
-
-/// The Color type holds both a (runtime) color type and value.
+/// The Color type is a tagged union that can hold any predefined colorspace.
 /// This correspond to both "specified", "computed", and "used" colors in CSS.
 /// In typical usage, you will want to map to sRGB 32-bit RGBA quadruplet.
 /// Basically a tagged union.
@@ -54,51 +26,48 @@ public:
 nothrow:
 @nogc:
 @safe:
-    /// CSS spec recommends:
-    /// "(16bit, half-float, or float per component is recommended for internal storage). 
-    /// Values must be rounded towards +∞, not truncated."
+    
+    // Note: accessing these representation is dangerous, only one of them is meaningful
+    // according to `colorspace`.
     union
     {
-        struct
-        {
-            float r, g, b;
-        }
+        // Efficient representation go there:
+        L8    _L8;
+        LA8   _LA8;
+        RGB8  _RGB8;
+        RGBA8 _RGBA8;
 
-        struct
-        {
-            float h, s, l;
-        }
+        // CSS spec recommends:
+        // "(16bit, half-float, or float per component is recommended for internal storage). 
+        // Values must be rounded towards +∞, not truncated."
+        // CSS-compatible types below, with more precision.
+        // Note that the CSS types can contain NaN, unlike the efficient representations.
+
+        RGBAf _RGBAf;
+        HSLAf _HSLAf;
     }
 
-    // Opacity value, represented from 0.0f (transparent) to 1.0f (opaque).
-    float a; 
-
-    /// Converts the color to a quadruplet of R, G, B, A bytes.
-    ubyte[4] toSRGB()
+    /// Get colorspace tag. This decices which member is meaningful.
+    Colorspace colorspace()
     {
-        final switch(colorSpace) with (Colorspace)
-        {
-            case srgb: assert(0);
-            case srgb_linear: assert(0);
-            case display_p3: assert(0);
-            case a98_rgb: assert(0);
-            case prophoto_rgb: assert(0);
-            case xyz: assert(0);
-            case xyz_D50: assert(0);
-            case xyz_D65: assert(0);
-            case hsl: assert(0);
-            case hwb: assert(0);
-            case lch: assert(0);
-            case oklch: assert(0);
-            case lab: assert(0);
-            case oklab: assert(0);
-        }
-
+        return _colorspace;
     }
 
-private:
-    Colorspace colorSpace;
+    /// Unsafe cast of colorspace. Normally you never need this.
+    void assumeColorspace(Colorspace colorspace) @system
+    {
+        _colorspace = colorspace;
+    }
+
+    /// Tag the colorspace in the type. Which means `Color` is not meant for storage, but for 
+    /// intermediate computation.
+    Colorspace _colorspace; 
 }
+
+pragma(msg, Color.sizeof);
+
+    
+
 
 
 /// The `rgb` function is the same as in CSS color specifications.
@@ -117,11 +86,11 @@ private:
 Color rgb(float red, float green, float blue, float alpha = 1.0f)
 {
     Color c;
-    c.r = red;
-    c.g = green;
-    c.b = blue;
-    c.a = alpha;
-    c.colorSpace = Colorspace.srgb;
+    c._RGBAf.r = red / 255.0f;
+    c._RGBAf.g = green / 255.0f;
+    c._RGBAf.b = blue / 255.0f;
+    c._RGBAf.a = alpha;
+    c._colorspace = Colorspace.rgbaf32;
     return c;
 }
 
@@ -142,11 +111,11 @@ alias rgba = rgb;
 Color hsl(float hueDegrees, float sat, float light, float alpha = 1.0f)
 {
     Color c;
-    c.h = hueDegrees,
-    c.s = sat;
-    c.l = light;
-    c.a = alpha;
-    c.colorSpace = Colorspace.hsl; // Return a color still represented as HSL.
+    c._HSLAf.h = hueDegrees,
+    c._HSLAf.s = sat;
+    c._HSLAf.l = light;
+    c._HSLAf.a = alpha;
+    c._colorspace = Colorspace.hslaf32; // Return a color still represented as HSL.
     return c;
 }
 
@@ -179,3 +148,31 @@ alias hsla = hsl;
 
 +/
 
+
+/// Convert a `Color` to another colorspace.
+/// Converts the color in-place to another colorspace, preserving at least 16-bit of precision.
+Color convertColorToColorspace(Color color, Colorspace target)
+{
+    Colorspace from = color.colorspace;
+    if (from == target)
+        return color; // already there
+
+    Colorspace inter = getIntermediateColorspace(from, target);
+
+    if (inter == from) // already in right space
+    {
+        // Conversion here
+        assert(false);
+    }
+    else
+    {
+        // Else recurse (must make progress).
+        Color tmp = convertColorToColorspace(color, inter);
+        return convertColorToColorspace(tmp, target);
+    }
+}
+
+Colorspace getIntermediateColorspace(Colorspace source, Colorspace target)
+{
+    return Colorspace.rgba8;
+}

@@ -11,6 +11,7 @@ nothrow @nogc @safe:
 
 
 public import colors.types;
+public import colors.colorspace;
 public import colors.parser;
 
 
