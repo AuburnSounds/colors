@@ -1,11 +1,6 @@
 {
-	"name": "colors",
-	"license": "BSL-1.0",
+    "name": "colors",
+    "license": "BSL-1.0",
 
     "description": "A color library that implement roughly CSS colors.",
-
-    "dependencies":
-    {
-        "dplug:core": "~>13.0"
-    }
 }
