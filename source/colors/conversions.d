@@ -8,6 +8,9 @@ module colors.conversions;
 
 
 import colors.types;
+import colors.colorspace;
+
+// This is for internal use.
 
 pure nothrow @nogc @safe:
 
@@ -51,3 +54,9 @@ float[3] hslToRgb(float hue, float sat, float light)
 
 
 // Reference: https://www.w3.org/TR/css-color-4/#hsl-to-rgb
+
+
+Colorspace getIntermediateColorspace(Colorspace source, Colorspace target) pure
+{
+    return Colorspace.rgba8;
+}

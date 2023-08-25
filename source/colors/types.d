@@ -13,7 +13,7 @@ import std.math;
 import colors.conversions;
 import colors.colorspace;
 
-nothrow @nogc @safe:
+public nothrow @nogc @safe:
 
 /// The Color type is a tagged union that can hold any predefined colorspace.
 /// This correspond to both "specified", "computed", and "used" colors in CSS.
@@ -163,25 +163,28 @@ alias hsla = hsl;
 Color convertColorToColorspace(Color color, Colorspace target) pure
 {
     Colorspace from = color.colorspace;
+
+    if (target == Colorspace.unknown)
+    {
+        assert(false); // Not supposed to happen, every Color are convertible to any other space (though the semantic could change).
+    }
+
     if (from == target)
         return color; // already there
 
     Colorspace inter = getIntermediateColorspace(from, target);
 
-    if (inter == from) // already in right space
+    if (from == inter)
     {
-        // Conversion here
-        assert(false);
+        return convertFromIntermediate(color, target);
+    }
+    else if (target == inter)
+    {
+        return convertToIntermediate(color, target);
     }
     else
     {
-        // Else recurse (must make progress).
-        Color tmp = convertColorToColorspace(color, inter);
-        return convertColorToColorspace(tmp, target);
+        return convertFromIntermediate(convertToIntermediate(color, inter), target);
     }
 }
 
-Colorspace getIntermediateColorspace(Colorspace source, Colorspace target) pure
-{
-    return Colorspace.rgba8;
-}

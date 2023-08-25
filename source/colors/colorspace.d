@@ -35,7 +35,7 @@ enum Colorspace
     rgbaf32,
 
     /// A 32-bit float Hue Saturation Luminance space that is based-upon sRGB. "hsl" in CSS.
-    hslaf32
+    hslaf32,
 
 /+
     /// The sRGB-linear predefined color space is the same as srgb except that the transfer 
@@ -59,6 +59,8 @@ enum Colorspace
     lab,
     oklab
     +/
+
+    unknown // used as special value to indicate unsupported conversions
 }
 
 
