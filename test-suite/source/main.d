@@ -47,8 +47,13 @@ void testRGB()
             cwritefln("    Returned an error with message <lcyan>%s</lcyan>", err);
         else
         {
-            srgb = color.toSRGB();
+            RGBA8 rgba = color.toRGBA8();
+            srgb[0] = rgba.r;
+            srgb[1] = rgba.g;
+            srgb[2] = rgba.b;
+            srgb[3] = rgba.a;
             cwritefln("    Returned a Color");
+        }
 
         if (result is null && success)
             cwriteln("    <lred>FAIL</lred>: accept invalid");

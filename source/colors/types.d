@@ -47,10 +47,16 @@ nothrow:
         HSLAf _HSLAf;
     }
 
-    /// Get colorspace tag. This decices which member is meaningful.
-    Colorspace colorspace()
+    /// Get colorspace tag. This is the tag of this tagges union.
+    Colorspace colorspace() pure const
     {
         return _colorspace;
+    }
+
+    /// Converts the color to a given colorspace.
+    Color toColorSpace(Colorspace colorspace) pure const
+    {
+        return convertColorToColorspace(this, colorspace);
     }
 
     /// Unsafe cast of colorspace. Normally you never need this.
@@ -59,15 +65,18 @@ nothrow:
         _colorspace = colorspace;
     }
 
+    /// A 8-bit tristimulus sRGB color, with alpha.
+    RGBA8 toRGBA8()  const
+    {
+        Color c = toColorSpace(Colorspace.rgba8);
+        return c._RGBA8;
+    }
+
+private:
     /// Tag the colorspace in the type. Which means `Color` is not meant for storage, but for 
     /// intermediate computation.
     Colorspace _colorspace; 
 }
-
-pragma(msg, Color.sizeof);
-
-    
-
 
 
 /// The `rgb` function is the same as in CSS color specifications.
@@ -151,7 +160,7 @@ alias hsla = hsl;
 
 /// Convert a `Color` to another colorspace.
 /// Converts the color in-place to another colorspace, preserving at least 16-bit of precision.
-Color convertColorToColorspace(Color color, Colorspace target)
+Color convertColorToColorspace(Color color, Colorspace target) pure
 {
     Colorspace from = color.colorspace;
     if (from == target)
@@ -172,7 +181,7 @@ Color convertColorToColorspace(Color color, Colorspace target)
     }
 }
 
-Colorspace getIntermediateColorspace(Colorspace source, Colorspace target)
+Colorspace getIntermediateColorspace(Colorspace source, Colorspace target) pure
 {
     return Colorspace.rgba8;
 }
