@@ -60,7 +60,7 @@ nothrow:
     }
 
     /// Unsafe cast of colorspace. Normally you never need this.
-    void assumeColorspace(Colorspace colorspace) @system
+    void assumeColorspace(Colorspace colorspace) pure @system
     {
         _colorspace = colorspace;
     }
