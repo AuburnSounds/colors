@@ -12,6 +12,7 @@ import std.math: PI, floor;
 import core.stdc.string: strlen;
 
 import colors.types;
+import colors.colorspace;
 import colors.conversions;
 //import dplug.core.string;
 
@@ -31,13 +32,13 @@ import colors.conversions;
 /// Example:
 /// ---
 /// import color.parser;
-/// parseHTMLColor("black", color, error);                      // all HTML named colors
-/// parseHTMLColor("#fe85dc", color, error);                    // hex colors including alpha versions
-/// parseHTMLColor("rgba(64, 255, 128, 0.24)", color, error);   // alpha
-/// parseHTMLColor("rgb(9e-1, 50%, 128)", color, error);        // percentage, floating-point
-/// parseHTMLColor("hsl(120deg, 25%, 75%)", color, error);      // hsv colors
-/// parseHTMLColor("gray(0.5)", color, error);                  // gray colors
-/// parseHTMLColor(" rgb ( 245 , 112 , 74 )  ", color, error);  // strips whitespace
+/// parseCSSColor("black", color, error);                      // all HTML named colors
+/// parseCSSColor("#fe85dc", color, error);                    // hex colors including alpha versions
+/// parseCSSColor("rgba(64, 255, 128, 0.24)", color, error);   // alpha
+/// parseCSSColor("rgb(9e-1, 50%, 128)", color, error);        // percentage, floating-point
+/// parseCSSColor("hsl(120deg, 25%, 75%)", color, error);      // hsv colors
+/// parseCSSColor("gray(0.5)", color, error);                  // gray colors
+/// parseCSSColor(" rgb ( 245 , 112 , 74 )  ", color, error);  // strips whitespace
 /// ---
 ///
 bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string error) nothrow @nogc @safe
@@ -628,9 +629,9 @@ unittest
 {
     bool doesntParse(string color)
     {
-        RGBA parsed;
+        Color parsed;
         string error;
-        if (parseHTMLColor(color, parsed, error))
+        if (parseCSSColor(color, parsed, error))
         {
             return false;
         }
@@ -640,14 +641,14 @@ unittest
 
     bool testParse(string color, ubyte[4] correct)
     {
-        RGBA parsed;
-        RGBA correctC = RGBA(correct[0], correct[1], correct[2], correct[3]);
+        Color parsed;
+        RGBA8 correctC = RGBA8(correct[0], correct[1], correct[2], correct[3]);
         string error;
-        
 
-        if (parseHTMLColor(color, parsed, error))
+        if (parseCSSColor(color, parsed, error))
         {
-            return parsed == correctC;
+            RGBA8 srgb = parsed.toRGBA8(); 
+            return srgb == correctC;
         }
         else
             return false;
@@ -696,14 +697,6 @@ unittest
     assert(testParse("lime"  , [0, 255, 0, 255])); // termination with 2 candidate alive
     assert(testParse("limegreen"  , [50, 205, 50, 255]));    
 }
-
-unittest
-{
-    // should work in CTFE
-    static immutable RGBA color = parseHTMLColor("red");
-}
-
-
 
 // <copied from dplug:core to avoid a dependency>
 

@@ -247,7 +247,7 @@ Color convertFromIntermediate(Color c, Colorspace target) @trusted
         case rgbaf32:
 
             // TODO: clamp and remove NaN?
-            switch(source)
+            switch(target)
             {
                 case l8:
                     r._L8.l = cast(ubyte)(0.5f + 255.0f * (c._RGBAf.r + c._RGBAf.g + c._RGBAf.b) / 3.0f);

@@ -1,5 +1,7 @@
 import colors;
 import consolecolors;
+import std.math;
+import std.format;
 
 void main()
 {
@@ -15,6 +17,30 @@ class Result
     {
         this.model = model;
         this.value = value;
+    }
+
+    override string toString()
+    {
+        int r = cast(int)(0.5 + 255 * value[0]);
+        int g = cast(int)(0.5 + 255 * value[1]);
+        int b = cast(int)(0.5 + 255 * value[2]);
+        return format("rgba(%s, %s, %s, %s)", r, g, b, value[3]);
+    }
+
+    bool isSameValueAs(RGBA8 color)
+    {
+        int r = cast(int)(0.5 + value[0]);
+        if (r != color.r)
+            return false;   
+        int g = cast(int)(0.5 + value[1]);
+        if (g != color.g)
+            return false;
+        int b = cast(int)(0.5 + value[2]);
+        if (b != color.b)
+            return false;
+        if (abs(value[3] - color.a / 255) > 0.2)
+            return false;
+        return true;
     }
 }
 
@@ -42,6 +68,7 @@ void testRGB()
 
         Color color;
         string err;
+        bool colorIsCorrect = true;
         bool success = parseCSSColor(colorString, color, err);
         if (!success)
             cwritefln("    Returned an error with message <lcyan>%s</lcyan>", err);
@@ -52,7 +79,19 @@ void testRGB()
             srgb[1] = rgba.g;
             srgb[2] = rgba.b;
             srgb[3] = rgba.a;
-            cwritefln("    Returned a Color");
+            cwritefln("    Returned a Color (<yellow>%d, %d, %d, %d</yellow>) (as sRGB 8-bit)",
+                      rgba.r, rgba.g, rgba.b, rgba.a);
+
+            colorIsCorrect = result.isSameValueAs(rgba);
+            if (!colorIsCorrect)
+            {
+                cwritefln("    but expected Color <cyan>%s</cyan>)", result);
+                success = false;
+            }
+        }
+
+        if (result !is null && colorIsCorrect)
+        {
         }
 
         if (result is null && success)
@@ -60,7 +99,7 @@ void testRGB()
         if (result !is null && !success)
             cwriteln("    <lred>FAIL</lred> rejects valid");
         if (result is null && !success)
-            cwriteln("    <lgreen>SUCCESS</lgreen> rejects valid");
+            cwriteln("    <lgreen>SUCCESS</lgreen> rejects invalid");
         if (result !is null && success)
         {
             cwriteln("    <lgreen>SUCCESS</lgreen> accepts valid and parses OK");

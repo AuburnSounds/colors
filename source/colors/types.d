@@ -72,6 +72,13 @@ nothrow:
         return c._RGBA8;
     }
 
+    /// A 32-bit float normalized tristimulus sRGB color, with alpha.
+    RGBA8 toRGBAf()  const
+    {
+        Color c = toColorSpace(Colorspace.rgba8);
+        return c._RGBA8;
+    }
+
 private:
     /// Tag the colorspace in the type. Which means `Color` is not meant for storage, but for 
     /// intermediate computation.
