@@ -21,9 +21,9 @@ class Result
 
     override string toString()
     {
-        int r = cast(int)(0.5 + 255 * value[0]);
-        int g = cast(int)(0.5 + 255 * value[1]);
-        int b = cast(int)(0.5 + 255 * value[2]);
+        int r = cast(int)(0.5 + value[0]);
+        int g = cast(int)(0.5 + value[1]);
+        int b = cast(int)(0.5 + value[2]);
         return format("rgba(%s, %s, %s, %s)", r, g, b, value[3]);
     }
 
@@ -61,7 +61,7 @@ void testRGB()
     void test(string colorString, Result result, string desc, Options opt = null)
     {
         cwritefln(" <white>*** TEST %d: %s</white>", numTest++, desc);
-        cwritefln("    <green>Parse</green> color string <yellow>%s</yellow>", colorString);
+        cwritefln("    <green>Parse</green> color string <yellow>%s</yellow>", escapeCCL(colorString));
 
 
         ubyte[4] srgb = [0, 0, 0, 0];
@@ -79,8 +79,8 @@ void testRGB()
             srgb[1] = rgba.g;
             srgb[2] = rgba.b;
             srgb[3] = rgba.a;
-            cwritefln("    Returned a Color (<yellow>%d, %d, %d, %d</yellow>) (as sRGB 8-bit)",
-                      rgba.r, rgba.g, rgba.b, rgba.a);
+            cwritefln("    Returned a Color (<yellow>%d, %d, %d, %f</yellow>) (as sRGB 8-bit)",
+                      rgba.r, rgba.g, rgba.b, rgba.a / 255.0f);
 
             colorIsCorrect = result.isSameValueAs(rgba);
             if (!colorIsCorrect)
@@ -95,9 +95,15 @@ void testRGB()
         }
 
         if (result is null && success)
+        {
             cwriteln("    <lred>FAIL</lred>: accept invalid");
+            throw new Exception("Test suite failed");
+        }
         if (result !is null && !success)
+        {
             cwriteln("    <lred>FAIL</lred> rejects valid");
+            throw new Exception("Test suite failed");
+        }
         if (result is null && !success)
             cwriteln("    <lgreen>SUCCESS</lgreen> rejects invalid");
         if (result !is null && success)
@@ -110,10 +116,13 @@ void testRGB()
 
     test("rgb(30.7, 60.6, 41.2)",            new Result("rgb", [31, 61, 41, 1]                ), "rgb() with decimals", new Options(true));
     test("rgb(.4, .4, .4)",                  new Result("rgb", [0, 0, 0, 1]                   ), "rgb() with decimals without leading digits", new Options(true));
-    test("rgb(5.5%, 10.875%, 32.25%)",       new Result("rgb", [14, 28, 82, 1]                ), "rgb() with decimal percentages");
+    test(`rgb(5.5%, 10.875%, 32.25%)`,       new Result("rgb", [14, 28, 82, 1]                ), "rgb() with decimal percentages");
     test("rgb(5..5%, 10....875%, 32...25%)", null, "rgb() percentages with multiple decimal points");
     test("rgb(-5%, 10.875%, -32.25%)",       new Result("rgb", [0, 28, 0, 1]) , "rgb() with negative percentages");
-    test("rgb(+5%, 10.875%, +32.25%)",       new Result("rgb", [14, 28, 82, 1]) , "rgb() with unary-positive percentages");
+
+    // note: adapted that one test to match chrome and edge
+    test("rgb(+5%, 10.875%, +32.25%)",       new Result("rgb", [13, 28, 82, 1]) , "rgb() with unary-positive percentages"); 
+
     test("rgb(300, 170, 750)",               new Result("rgb", [255, 170, 255, 1]) , "rgb() with above-maximum numbers");
     test("rgb(-132, 170, -72)",              new Result("rgb", [0, 170, 0, 1]) , "rgb() with negative numbers");
     test("rgb(+132, +170, +73)",             new Result("rgb", [132, 170, 73, 1]) , "rgb() with unary-positive numbers");

@@ -209,7 +209,7 @@ Color convertFromIntermediate(Color c, Colorspace target) @trusted
 
                 case hslaf32:
 
-                    // TODO
+                    // TODO 
                     assert(false);
                     //break;
 

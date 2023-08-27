@@ -94,7 +94,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
 
     bool isWhite(char ch) nothrow @nogc @safe
     {
-        return ch == ' ';
+        return ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t' || ch == '\r';
     }
 
     bool isDigit(char ch) nothrow @nogc @safe
@@ -144,6 +144,20 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
     {       
         while (isWhite(peek()))
             next;
+    }
+
+    bool expectOptionalPunct(char ch) nothrow @nogc @safe
+    {
+        skipWhiteSpace();
+        bool seen = false;
+        char pch = peek();
+        if (pch == ch)
+        {            
+            seen = true;
+            next;
+        }
+        skipWhiteSpace();
+        return seen;
     }
 
     bool expectPunct(char ch) nothrow @nogc @safe
@@ -413,22 +427,18 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             error = "Expected ( in color string";
             return false;
         }
+        int components = 0;
         if (!parseColorValue(red, error))
             return false;
-        if (!expectPunct(','))
-        {
-            error = "Expected , in color string";
-            return false;
-        }
+        components += 1;
+        bool parsedComma0 = expectOptionalPunct(',');
         if (!parseColorValue(green, error))
             return false;
-        if (!expectPunct(','))
-        {
-            error = "Expected , in color string";
-            return false;
-        }
+        components += 1;
+        bool parsedComma1 = expectOptionalPunct(',');
         if (!parseColorValue(blue, error))
             return false;
+        components += 1;
         if (hasAlpha)
         {
             if (!expectPunct(','))
@@ -438,13 +448,15 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             }
             if (!parseOpacity(alpha, error))
                 return false;
+            components += 1;
         }
-        if (!expectPunct(')'))
+        if (components <= 2)
         {
-            error = "Expected , in color string";
+            error = "Not enough components";
             return false;
         }
-         outColor = rgba(red, green, blue, alpha);
+        bool hasClosingParen = expectOptionalPunct(')'); // lack of closing paren is valid
+        outColor = rgba(red, green, blue, alpha);
     }
     else if (parseString("hsl"))
     {
