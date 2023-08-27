@@ -15,9 +15,10 @@ import colors.colorspace;
 
 public nothrow @nogc @safe:
 
-/// The Color type is a tagged union that can hold any predefined colorspace.
-/// This correspond to both "specified", "computed", and "used" colors in CSS.
-/// In typical usage, you will want to map to sRGB 32-bit RGBA quadruplet.
+/// The Color type is a tagged union that can hold one color in a CSS-defined colorspace.
+/// This correspond to both "specified", "computed", and "used" colors in CSS specification.
+/// In typical usage, you will want to map to sRGB 32-bit RGBA quadruplet, and the function
+/// for this is called: `toRGBA8()`.
 /// Basically a tagged union.
 /// Reference: https://www.w3.org/TR/css-color-4/
 struct Color
@@ -32,9 +33,6 @@ nothrow:
     union
     {
         // Efficient representation go there:
-        L8    _L8;
-        LA8   _LA8;
-        RGB8  _RGB8;
         RGBA8 _RGBA8;
 
         // CSS spec recommends:

@@ -14,15 +14,6 @@ module colors.colorspace;
 /// The Predefined Color Spaces. For now, no custom space.
 enum Colorspace
 {
-    /// A 8-bit luminance sRGB value.
-    l8,
-
-    /// A 8-bit luminance sRGB value, with alpha.
-    la8,
-
-    /// A 8-bit tristimulus sRGB color.
-    rgb8,
-
     /// A 8-bit tristimulus sRGB color, with alpha.
     /// This is the most common encoding, and is here to avoid needless conversion for this case.
     rgba8,

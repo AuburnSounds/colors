@@ -125,27 +125,6 @@ Color convertToIntermediate(Color c, Colorspace target) @trusted
     case rgba8:
         switch(source)
         {
-            case l8:
-                r._RGBA8.r = c._L8.l;
-                r._RGBA8.g = c._L8.l;
-                r._RGBA8.b = c._L8.l;
-                r._RGBA8.a = 255;
-                break;
-
-            case la8:
-                r._RGBA8.r = c._LA8.l;
-                r._RGBA8.g = c._LA8.l;
-                r._RGBA8.b = c._LA8.l;
-                r._RGBA8.a = c._LA8.a;
-                break;
-
-            case rgb8:
-                r._RGBA8.r = c._RGB8.r;
-                r._RGBA8.g = c._RGB8.g;
-                r._RGBA8.b = c._RGB8.b;
-                r._RGBA8.a = 255;
-                break;
-
             case rgba8:
                 r._RGBA8 = c._RGBA8;
                 break;
@@ -159,27 +138,6 @@ Color convertToIntermediate(Color c, Colorspace target) @trusted
     case rgbaf32:
         switch(source)
         {
-            case l8:
-                r._RGBAf.r = c._L8.l / 255.0f;
-                r._RGBAf.g = c._L8.l / 255.0f;
-                r._RGBAf.b = c._L8.l / 255.0f;
-                r._RGBAf.a = 1.0f;
-                break;
-
-            case la8:
-                r._RGBAf.r = c._LA8.l / 255.0f;
-                r._RGBAf.g = c._LA8.l / 255.0f;
-                r._RGBAf.b = c._LA8.l / 255.0f;
-                r._RGBAf.a = c._LA8.a / 255.0f;
-                break;
-
-            case rgb8:
-                r._RGBAf.r = c._RGB8.r / 255.0f;
-                r._RGBAf.g = c._RGB8.g / 255.0f;
-                r._RGBAf.b = c._RGB8.b / 255.0f;
-                r._RGBAf.a = 1.0f;
-                break;
-
             case rgba8:
                 r._RGBAf.r = c._RGBA8.r / 255.0f;
                 r._RGBAf.g = c._RGBA8.g / 255.0f;
@@ -224,22 +182,6 @@ Color convertFromIntermediate(Color c, Colorspace target) @trusted
         case rgba8:
             switch(target)
             {
-                // TODO: not sure where to clamp
-                case l8:
-                    r._L8.l = cast(ubyte)( (c._RGBA8.r + c._RGBA8.g + c._RGBA8.b + 2) / 3 );
-                    break;
-
-                case la8:
-                    r._LA8.l = cast(ubyte)( (c._RGBA8.r + c._RGBA8.g + c._RGBA8.b + 2) / 3 );
-                    r._LA8.a = c._RGBA8.a;
-                    break;
-
-                case rgb8:
-                    r._RGB8.r = c._RGBA8.r;
-                    r._RGB8.g = c._RGBA8.g;
-                    r._RGB8.b = c._RGBA8.b;
-                    break;
-
                 case rgba8:
                     r._RGBA8 = c._RGBA8;
                     break;
@@ -254,21 +196,6 @@ Color convertFromIntermediate(Color c, Colorspace target) @trusted
             // TODO: clamp and remove NaN?
             switch(target)
             {
-                case l8:
-                    r._L8.l = cast(ubyte)(0.5f + 255.0f * (c._RGBAf.r + c._RGBAf.g + c._RGBAf.b) / 3.0f);
-                    break;
-
-                case la8:
-                    r._LA8.l = cast(ubyte)(0.5f + 255.0f * (c._RGBAf.r + c._RGBAf.g + c._RGBAf.b) / 3.0f);
-                    r._LA8.a = cast(ubyte)(0.5f + 255.0f * c._RGBAf.a);
-                    break;
-
-                case rgb8:
-                    r._RGB8.r = cast(ubyte)(0.5f + 255.0f * c._RGBAf.r);
-                    r._RGB8.g = cast(ubyte)(0.5f + 255.0f * c._RGBAf.g);
-                    r._RGB8.b = cast(ubyte)(0.5f + 255.0f * c._RGBAf.b);
-                    break;
-
                 case rgba8:
                     r._RGBA8.r = cast(ubyte)(0.5f + 255.0f * c._RGBAf.r);
                     r._RGBA8.g = cast(ubyte)(0.5f + 255.0f * c._RGBAf.g);
