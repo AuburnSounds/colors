@@ -101,6 +101,10 @@ private:
 ///   alpha  Alpha value in 0 to 1.0f (opacity).
 Color rgb(float red, float green, float blue, float alpha = 1.0f)
 {
+    clamp_0_255(red);
+    clamp_0_255(green);
+    clamp_0_255(blue);
+    clamp_0_1(alpha);
     Color c;
     c._RGBAf.r = red / 255.0f;
     c._RGBAf.g = green / 255.0f;
@@ -126,6 +130,10 @@ alias rgba = rgb;
 ///   alpha Alpha value in 0 to 1.0f (opacity).
 Color hsl(float hueDegrees, float sat, float light, float alpha = 1.0f)
 {
+    // TODO: should clamp or fmod hueDegrees here?
+    clamp_0_1(sat);
+    clamp_0_1(light);
+    clamp_0_1(alpha);
     Color c;
     c._HSLAf.h = hueDegrees,
     c._HSLAf.s = sat;
@@ -138,32 +146,6 @@ Color hsl(float hueDegrees, float sat, float light, float alpha = 1.0f)
 /// In CSS, `hsla` is simply in alias of `hsl`. You can specify an alpha to `hsla`, or omit it with 
 /// `hsla`.
 alias hsla = hsl;
-
-/+
-    // Convert to turns
-    float hueTurns = hueDegrees / 360.0f;
-    hueTurns -= floor(hueTurns); // take remainder
-    float hue = 6.0 * hueTurns;
-
-    // Saturation and lightness are clipped.
-    if (sat < 0) sat = 0;
-    if (sat > 1) sat = 1;
-    if (light < 0) light = 0;
-    if (light > 1) light = 1;
-
-    // For now, we store it in sRGB space.
-    Color c;
-    float[3] rgb = convertHSLtoRGB(hue, sat, light);
-
-    red   = clamp0to255( cast(int)(0.5 + 255.0 * rgb[0]) );
-    green = clamp0to255( cast(int)(0.5 + 255.0 * rgb[1]) );
-    blue  = clamp0to255( cast(int)(0.5 + 255.0 * rgb[2]) );
-    return c;
-}
-
-
-+/
-
 
 /// Convert a `Color` to another colorspace.
 /// Converts the color in-place to another colorspace, preserving at least 16-bit of precision.

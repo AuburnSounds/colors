@@ -229,7 +229,6 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         if (!err)
         {
             *number = scanned;
-            error = "";
             return true;
         }
         else
@@ -451,12 +450,10 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
     {
         bool hasAlpha = parseChar('a');
         expectPunct('(');
-
         float alpha = 1.0f;
         double hueDegrees;
         if (!parseHueInDegrees(hueDegrees, error))
             return false;
-        
         // Convert to turns
         if (!expectPunct(','))
         {
@@ -485,7 +482,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
                 return false;
         }
         expectPunct(')');
-        outColor = hsla(hueDegrees, sat, light, alpha / 255.0f);
+        outColor = hsla(hueDegrees, sat, light, alpha);
     }
     else
     {
@@ -518,7 +515,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
                         int green = (uintColor >> 16) & 0xff;
                         int blue  = (uintColor >>  8) & 0xff;
                         int alpha = (uintColor >>  0) & 0xff;
-                        outColor = rgba(red / 255.0f, green / 255.0f, blue / 255.0f, alpha / 255.0f);
+                        outColor = rgba(red, green, blue, alpha / 255.0f);
                         break matchloop;
                     }
                 }
@@ -622,11 +619,9 @@ immutable static uint[147 + 1] namedColorValues =
     0xffffffff, 0xf5f5f5ff, 0xffff00ff, 0x9acd32ff,
 ];
 
-
-
-
 unittest
 {
+    import core.stdc.stdio;
     bool doesntParse(string color)
     {
         Color parsed;
@@ -648,10 +643,19 @@ unittest
         if (parseCSSColor(color, parsed, error))
         {
             RGBA8 srgb = parsed.toRGBA8(); 
+            if (srgb != correctC)
+            {
+                printf("Error: got %d,%d,%d,%d instead of %d,%d,%d,%d.\n",
+                       srgb.r, srgb.g, srgb.b, srgb.a,
+                       correctC.r, correctC.g, correctC.b, correctC.a);
+            }
             return srgb == correctC;
         }
         else
+        {
+            printf("Error: didn't parse.\n");
             return false;
+        }
     }
 
     assert(doesntParse(""));

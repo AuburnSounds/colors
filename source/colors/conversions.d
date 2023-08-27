@@ -22,15 +22,20 @@ pure nothrow @nogc @safe:
 /// Reference: https://www.w3.org/TR/css-color-4/#hsl-to-rgb
 float[3] hslToRgb(float hue, float sat, float light) 
 {
-    assert(hue >= -360 && hue <= 720.0f);
+    assert(hue >= -360 && hue <= 720.0f); // blerg, where to lift that limitation?
     assert(sat >= 0.0f && sat <= 1.0f);
     assert(light >= 0.0f && light <= 1.0f);
 
+    //import core.stdc.stdio;
+    //debug printf("hslToRgb(%f, %f, %f)\n", hue, sat, light);
+    
     // Convert hue to integer here.
     // Round to single degree.
     // FUTURE: round to 16th of degrees to support very fine hues.
-    int ihue = cast(int)(hue * 16 + 360 + 0.5f);
+    int ihue = cast(int)(hue + 360 + 0.5f);
+    //debug printf("ihue = %d\n", ihue);
     ihue = ihue % 360; // TODO: that doesn't sound very precise?
+    //debug printf("ihue = %d\n", ihue);
     if (ihue < 0) ihue += 360;
     assert(ihue >= 0 && ihue < 360);
 
@@ -290,4 +295,16 @@ Color convertFromIntermediate(Color c, Colorspace target) @trusted
             assert(false); // This intermediate doesn't exist.
     }
     return r;
+}
+
+void clamp_0_1(ref float x) pure
+{
+    if (x < 0) x = 0;
+    if (x > 1) x = 1;
+}
+
+void clamp_0_255(ref float x) pure
+{
+    if (x < 0) x = 0;
+    if (x > 255) x = 255;
 }
