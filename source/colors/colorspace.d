@@ -22,6 +22,12 @@ enum Colorspace
     */
     rgba8,
 
+    /** 
+        A 16-bit tristimulus sRGB color, with alpha.
+        This is not a CSS colorspace, and it here for completeness.
+    */
+    rgba16,
+
     
     // Below: CSS-compatible color spaces.
 
@@ -122,6 +128,23 @@ unittest
 }
 
 /** 
+    A 16-bit tristimulus sRGB color.
+    TODO: `rgb16` convenience function to create one such color.
+*/
+align(1) struct RGB16
+{
+    align(1):
+    ushort r = 0, 
+           g = 0, 
+           b = 0;
+}
+unittest
+{
+    // Create such a color like this
+    RGB16 yellow = RGB16(65535, 65535, 0);
+}
+
+/** 
    A 8-bit tristimulus sRGB color, with alpha.
     This is the most common encoding, and is here to avoid needless 
     conversion for this case.
@@ -138,6 +161,26 @@ align(1):
 unittest
 {
     assert(RGBA8.init == RGBA8(0, 0, 0, 0)); // transparent black by default
+}
+
+/** 
+    A 16-bit tristimulus sRGB color, with alpha.
+    This is the most common encoding, and is here to avoid needless
+    conversion for this case.
+    TODO: `rgba16` convenience function to create one such color.
+*/
+align(1) struct RGBA16
+{
+    align(1):
+    ushort r = 0, 
+           g = 0, 
+           b = 0,
+           a = 0;
+}
+unittest
+{
+    // transparent black by default
+    assert(RGBA16.init == RGBA16(0, 0, 0, 0)); 
 }
 
 /** 

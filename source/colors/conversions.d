@@ -147,6 +147,13 @@ Color convertToIntermediate(Color c, Colorspace target) @trusted
                 r._RGBAf.a = c._RGBA8.a / 255.0f;
                 break;
 
+            case rgba16:
+                r._RGBAf.r = c._RGBA16.r / 65535.0f;
+                r._RGBAf.g = c._RGBA16.g / 65535.0f;
+                r._RGBAf.b = c._RGBA16.b / 65535.0f;
+                r._RGBAf.a = c._RGBA16.a / 65535.0f;
+                break;
+
             case rgbaf32:
                 r._RGBAf = c._RGBAf;
                 break;
@@ -204,6 +211,12 @@ Color convertFromIntermediate(Color c, Colorspace target) @trusted
                     r._RGBA8.g = cast(ubyte)(0.5f+255.0f*c._RGBAf.g);
                     r._RGBA8.b = cast(ubyte)(0.5f+255.0f*c._RGBAf.b);
                     r._RGBA8.a = cast(ubyte)(0.5f+255.0f*c._RGBAf.a);
+                    break;
+                case rgba16:
+                    r._RGBA16.r = cast(ushort)(0.5f+65535.0f*c._RGBAf.r);
+                    r._RGBA16.g = cast(ushort)(0.5f+65535.0f*c._RGBAf.g);
+                    r._RGBA16.b = cast(ushort)(0.5f+65535.0f*c._RGBAf.b);
+                    r._RGBA16.a = cast(ushort)(0.5f+65535.0f*c._RGBAf.a);
                     break;
 
                 case rgbaf32:

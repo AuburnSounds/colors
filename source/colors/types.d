@@ -33,6 +33,7 @@ pure nothrow @nogc @safe:
     {
         // Efficient representation go there:
         RGBA8 _RGBA8;
+        RGBA16 _RGBA16;
 
         // CSS spec recommends:
         // "(16bit, half-float, or float per component is recommended 
@@ -52,6 +53,34 @@ pure nothrow @nogc @safe:
     this(const(char)[] cssColor)
     {
         this = color(cssColor);
+    }
+
+    /** 
+        Build from a 8-bit sRGB quadruplet.
+    */
+    this(RGBA8 c)
+    {
+        this._RGBA8 = c;
+        this._colorspace = Colorspace.rgba8;
+    }
+
+    /** 
+        Build from a 16-bit sRGB quadruplet.
+    */
+    this(RGBA16 c)
+    {
+        this._RGBA16 = c;
+        this._colorspace = Colorspace.rgba16;
+    }
+
+
+    /** 
+        Build from a 32-bit float sRGB quadruplet.
+    */
+    this(RGBAf c)
+    {
+        this._RGBAf = c;
+        this._colorspace = Colorspace.rgbaf32;
     }
 
     /**
@@ -80,12 +109,21 @@ pure nothrow @nogc @safe:
     }
 
     /** 
+        Returns: A 16-bit tristimulus sRGB color, with alpha.
+    */
+    RGBA16 toRGBA16() const
+    {
+        Color c = this.toColorSpace(Colorspace.rgba16);
+        return c._RGBA16;
+    }
+
+    /** 
         A 32-bit float normalized tristimulus sRGB color, with alpha.
     */
-    RGBA8 toRGBAf() const
+    RGBAf toRGBAf() const
     {
-        Color c = this.toColorSpace(Colorspace.rgba8);
-        return c._RGBA8;
+        Color c = this.toColorSpace(Colorspace.rgbaf32);
+        return c._RGBAf;
     }
 
 private:

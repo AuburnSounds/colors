@@ -15,6 +15,7 @@ end-goal is to be ready for more conversions than just staying sRGB forever. Col
 - 🎨 `rgb()` and `rgba()` functions, return a `Color`
 - 🎨 `hsl()` and `hsla()` functions, return a `Color`
 - 🎨 `Color.toRGBA8()` to get a 8-bit sRGB quadruplet
+- 🎨 `Color.toRGBA16()` to get a 16-bit sRGB quadruplet
 - 🎨 `Color.toRGBAf()` to get a 32-bit float sRGB quadruplet
 - 🎨 `nothrow @nogc @safe`
 - 🎨 See `test-suite/` for exact syntax supported, the goal is to follow 
