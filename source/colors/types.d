@@ -1,102 +1,108 @@
 /**
-* Monomorphic color type, intended to represent any tristimulus color.
-*
-* Copyright: Copyright Guillaume Piolat 2023.
-* License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
+    Monomorphic color type, to represent any tristimulus + alpha.
+
+    Copyright: Copyright Guillaume Piolat 2023-2024.
+    License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, BSL-1.0)
 */
 module colors.types;
 
-nothrow @nogc @safe:
-
-import std.math;
-
+//import std.math;
 import colors.conversions;
 import colors.colorspace;
 
-public nothrow @nogc @safe:
 
-/// The Color type is a tagged union that can hold one color in a CSS-defined colorspace.
-/// This correspond to both "specified", "computed", and "used" colors in CSS specification.
-/// In typical usage, you will want to map to sRGB 32-bit RGBA quadruplet, and the function
-/// for this is called: `toRGBA8()`.
-/// Basically a tagged union.
-/// Reference: https://www.w3.org/TR/css-color-4/
+pure nothrow @nogc @safe:
+
+
+/** 
+    The Color type is a tagged union that can hold one color in a 
+    CSS-defined colorspace. This correspond to both "specified", 
+    "computed", and "used" colors in CSS specification.
+    In typical use, you'll want to map to sRGB 32-bit RGBA quadruplet,
+    and the function for this is called: `toRGBA8()`.
+    Reference: https://www.w3.org/TR/css-color-4/
+*/
 struct Color
 {
-public:
-nothrow:
-@nogc:
-@safe:
+pure nothrow @nogc @safe:
     
-    // Note: accessing these representation is dangerous, only one of them is meaningful
-    // according to `colorspace`.
+    // Note: accessing these representation is dangerous, only one of 
+    // them is meaningful according to `colorspace`.
     union
     {
         // Efficient representation go there:
         RGBA8 _RGBA8;
 
         // CSS spec recommends:
-        // "(16bit, half-float, or float per component is recommended for internal storage). 
+        // "(16bit, half-float, or float per component is recommended 
+        // for internal storage). 
         // Values must be rounded towards +∞, not truncated."
         // CSS-compatible types below, with more precision.
-        // Note that the CSS types can contain NaN, unlike the efficient representations.
+        // Note that the CSS types can contain NaN, unlike the 
+        // efficient representations, and it's meaningful.
 
         RGBAf _RGBAf;
         HSLAf _HSLAf;
     }
 
-    /// Get colorspace tag. This is the tag of this tagges union.
-    Colorspace colorspace() pure const
+    /**
+        Get colorspace tag. This is the tag of this tagged union.
+    */
+    Colorspace colorspace() const
     {
         return _colorspace;
     }
 
-    /// Converts the color to a given colorspace.
-    Color toColorSpace(Colorspace colorspace) pure const
-    {
-        return convertColorToColorspace(this, colorspace);
-    }
-
-    /// Unsafe cast of colorspace. Normally you never need this.
-    void assumeColorspace(Colorspace colorspace) pure @system
+    /**
+        Unsafe cast of colorspace. Normally you never need this.
+    */
+    void assumeColorspace(Colorspace colorspace) @system
     {
         _colorspace = colorspace;
     }
 
-    /// A 8-bit tristimulus sRGB color, with alpha.
-    RGBA8 toRGBA8()  const
+    /** 
+        Returns: A 8-bit tristimulus sRGB color, with alpha.
+    */
+    RGBA8 toRGBA8() const
     {
-        Color c = toColorSpace(Colorspace.rgba8);
+        Color c = this.toColorSpace(Colorspace.rgba8);
         return c._RGBA8;
     }
 
-    /// A 32-bit float normalized tristimulus sRGB color, with alpha.
-    RGBA8 toRGBAf()  const
+    /** 
+        A 32-bit float normalized tristimulus sRGB color, with alpha.
+    */
+    RGBA8 toRGBAf() const
     {
-        Color c = toColorSpace(Colorspace.rgba8);
+        Color c = this.toColorSpace(Colorspace.rgba8);
         return c._RGBA8;
     }
 
 private:
-    /// Tag the colorspace in the type. Which means `Color` is not meant for storage, but for 
-    /// intermediate computation.
+    /**
+        Colorspace in the type. Which means `Color` is not meant for 
+        storage, but for intermediate computation and user experience.
+    */
     Colorspace _colorspace; 
 }
 
 
-/// The `rgb` function is the same as in CSS color specifications.
-///
-/// Expected values ranges from 0 to 255.
-///
-/// Instead of being either numbers or percentages, all values here 
-/// are assumed to be numbers from 0 to 255. However, internally the 
-/// color will be stored with higher accuracy, as per CSS spec.
-///
-/// Params:
-///   red    Red value in 0 to 255.0f.
-///   green  Green value in 0 to 255.0f.
-///   blue   Blue value in 0 to 255.0f.
-///   alpha  Alpha value in 0 to 1.0f (opacity).
+/**
+    The `rgb` function is the same as in CSS color specifications.
+   
+    Expected values ranges from 0 to 255.
+   
+    Instead of being either numbers or percentages, all values here 
+    are assumed to be numbers from 0 to 255. However, internally the 
+    color will be stored with higher accuracy, as per CSS spec.
+   
+    Params:
+      red    Red value in 0 to 255.0f.
+      green  Green value in 0 to 255.0f.
+      blue   Blue value in 0 to 255.0f.
+      alpha  Alpha value in 0 to 1.0f (opacity).
+*/
 Color rgb(float red, float green, float blue, float alpha = 1.0f)
 {
     clamp_0_255(red);
@@ -112,21 +118,30 @@ Color rgb(float red, float green, float blue, float alpha = 1.0f)
     return c;
 }
 
-/// In CSS, `rgba` is simply in alias of `rgb`. You can specify an alpha to `rgb`, or omit it with 
-/// `rgba`.
+
+/** 
+    In CSS, the `rgba` function is simply in alias of `rgb`. You can 
+    specify an alpha to `rgb`, or omit it with `rgba`.
+*/
 alias rgba = rgb;
 
 
-/// The `hsl` function is the same as in CSS color specifications.
-///
-/// Expected values ranges from 0 to 255.
-///
-/// Params:
-///   hue   Hue value in degrees (0 = red, 60 = yellow, 240 = blue). Can wrap around.
-///   sat   Saturation value in 0 to 1.0f.
-///   light Light value in 0 to 1.0f.
-///   alpha Alpha value in 0 to 1.0f (opacity).
-Color hsl(float hueDegrees, float sat, float light, float alpha = 1.0f)
+/** 
+    The `hsl` function is the same as in CSS color specifications.
+   
+    Expected values ranges from 0 to 255.
+   
+    Params:
+      hueDegrees Hue value (0 = red, 60 = yellow, 240 = blue). 
+                 Can wrap around.
+      sat        Saturation value in 0 to 1.0f.
+      light      Light value in 0 to 1.0f.
+      alpha      Alpha value in 0 to 1.0f (opacity).
+*/
+Color hsl(float hueDegrees, 
+          float sat, 
+          float light, 
+          float alpha = 1.0f)
 {
     // TODO: should clamp or fmod hueDegrees here?
     clamp_0_1(sat);
@@ -137,23 +152,32 @@ Color hsl(float hueDegrees, float sat, float light, float alpha = 1.0f)
     c._HSLAf.s = sat;
     c._HSLAf.l = light;
     c._HSLAf.a = alpha;
-    c._colorspace = Colorspace.hslaf32; // Return a color still represented as HSL.
+    c._colorspace = Colorspace.hslaf32;
     return c;
 }
 
-/// In CSS, `hsla` is simply in alias of `hsl`. You can specify an alpha to `hsla`, or omit it with 
-/// `hsla`.
+
+/** 
+    In CSS, the `hsla` function is simply in alias of `rgb`. You can 
+    specify an alpha to `rgb`, or omit it with `rgba`.
+*/
 alias hsla = hsl;
 
-/// Convert a `Color` to another colorspace.
-/// Converts the color in-place to another colorspace, preserving at least 16-bit of precision.
-Color convertColorToColorspace(Color color, Colorspace target) pure
+
+/** 
+    Convert a `Color` in-place to another colorspace.
+*/
+Color toColorSpace(const(Color) color, Colorspace target)
 {
+    // CSS mandates that we preserve at least 16-bit of precision.
+
     Colorspace from = color.colorspace;
 
     if (target == Colorspace.unknown)
     {
-        assert(false); // Not supposed to happen, every Color are convertible to any other space (though the semantic could change).
+        // Not supposed to happen, every Color are convertible to any 
+        // other space (though the semantics could change).
+        assert(false); 
     }
 
     if (from == target)
@@ -171,7 +195,8 @@ Color convertColorToColorspace(Color color, Colorspace target) pure
     }
     else
     {
-        return convertFromIntermediate(convertToIntermediate(color, inter), target);
+        Color c = convertToIntermediate(color, inter);
+        return convertFromIntermediate(c, target);
     }
 }
 

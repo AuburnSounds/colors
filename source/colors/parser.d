@@ -1,9 +1,9 @@
 /**
-* Implement CSS color parsing, like specified.
-* This uses the functions defined elsewhere in `colors`.
-*
-* Copyright: Copyright Guillaume Piolat 2020-2023.
-* License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
+    Implement CSS color parsing, like specified.
+    This uses the functions defined elsewhere in `colors`.
+
+    Copyright: Copyright Guillaume Piolat 2020-2024.
+    License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, BSL-1.0)
 */
 module colors.parser;
 
@@ -15,38 +15,76 @@ import colors.types;
 import colors.colorspace;
 import colors.conversions;
 
-/// Parses a CSS color string, and gives back a `Color`.
-///
-/// Params:
-///     cssColorString = A CSS string describing a color.
-///
-/// Returns:
-///     A specified Color, that keeps the intent of the user. 
-///     This is not necessarily usable right away, and will typically need sRGB conversion.
-///     In other words, colors stay in their colorspace of definition.
-///
-/// See_also: https://www.w3.org/TR/css-color-4/
-///
-///
-/// Example:
-/// ---
-/// import color.parser;
-/// parseCSSColor("black", color, error);                      // all HTML named colors
-/// parseCSSColor("#fe85dc", color, error);                    // hex colors including alpha versions
-/// parseCSSColor("rgba(64, 255, 128, 0.24)", color, error);   // alpha
-/// parseCSSColor("rgb(9e-1, 50%, 128)", color, error);        // percentage, floating-point
-/// parseCSSColor("hsl(120deg, 25%, 75%)", color, error);      // hsv colors
-/// parseCSSColor("gray(0.5)", color, error);                  // gray colors
-/// parseCSSColor(" rgb ( 245 , 112 , 74 )  ", color, error);  // strips whitespace
-/// ---
-///
-bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string error) nothrow @nogc @safe
+/** 
+    Parses a CSS color string, and gives back a `Color`.
+    If parsing fails, return transparent black.
+
+    See_also: `parseCSSColor`.
+*/
+Color color(const(char)[] cssColorString) nothrow @nogc @safe
 {
+    Color c;
+    string err;
+    if (parseCSSColor(cssColorString, c, err))
+        return c;
+    else
+        return c.init;
+}
+
+
+/**
+    Parses a CSS color string, and gives back a `Color`.
+   
+    Params:
+        cssColorString = A CSS string describing a color.
+   
+    Returns:
+        A specified Color, that keeps the intent of the user. 
+        This is not necessarily usable right away, and will typically 
+        need sRGB conversion.
+        In other words, colors stay in their colorspace of definition.
+   
+    See_also: https://www.w3.org/TR/css-color-4/
+   
+   
+    Example:
+    ---
+    import colors;
+    
+    // all HTML named colors
+    parseCSSColor("black", color, error);
+    
+    // hex colors including alpha versions                      
+    parseCSSColor("#fe85dc", color, error);
+
+    // alpha                    
+    parseCSSColor("rgba(64, 255, 128, 0.24)", color, error);   
+
+    // percentage, floating-point
+    parseCSSColor("rgb(9e-1, 50%, 128)", color, error);
+
+    // hsv colors
+    parseCSSColor("hsl(120deg, 25%, 75%)", color, error);
+
+    // gray colors
+    parseCSSColor("gray(0.5)", color, error);
+
+    // strips whitespace
+    parseCSSColor(" rgb ( 245 , 112 , 74 )  ", color, error);  
+    ---
+   
+*/
+bool parseCSSColor(const(char)[] cssColorString, 
+                   out Color outColor, 
+                   out string error) nothrow @nogc @safe
+{
+nothrow @nogc @safe:
+
     error = null; // indicate success
     const(char)[] s = cssColorString;   
     int index = 0;    
 
-    char peek() nothrow @nogc @safe
+    char peek()
     {
         if (index >= cssColorString.length)
             return '\0';
@@ -54,12 +92,12 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             return s[index];
     }
 
-    void next() nothrow @nogc @safe
+    void next()
     {
         index++;
     }
 
-    bool parseChar(char ch) nothrow @nogc @safe
+    bool parseChar(char ch)
     {
         if (peek() == ch)
         {
@@ -69,14 +107,14 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         return false;
     }
 
-    bool expectChar(char ch) nothrow @nogc @safe // senantic difference, "expect" returning false is an input error
+    bool expectChar(char ch) 
     {
         if (!parseChar(ch))
             return false;
         return true;
     }
 
-    bool parseString(string s) nothrow @nogc @safe
+    bool parseString(string s)
     {
         int save = index;
 
@@ -91,17 +129,18 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         return true;
     }
 
-    bool isWhite(char ch) nothrow @nogc @safe
+    bool isWhite(char ch)
     {
-        return ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t' || ch == '\r';
+        return ch == ' '  || ch == '\n' || ch == '\r' 
+            || ch == '\t' || ch == '\r';
     }
 
-    bool isDigit(char ch) nothrow @nogc @safe
+    bool isDigit(char ch)
     {
         return ch >= '0' && ch <= '9';
     }
 
-    bool expectDigit(out char digit) nothrow @nogc @safe
+    bool expectDigit(out char digit)
     {
         char ch = peek();
         if (isDigit(ch))
@@ -114,7 +153,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             return false;
     }
 
-    bool parseHexDigit(out int digit) nothrow @nogc @safe
+    bool parseHexDigit(out int digit)
     {
         char ch = peek();
         if (isDigit(ch))
@@ -139,13 +178,13 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             return false;
     }
 
-    void skipWhiteSpace() nothrow @nogc @safe
+    void skipWhiteSpace()
     {       
         while (isWhite(peek()))
             next;
     }
 
-    bool expectOptionalPunct(char ch) nothrow @nogc @safe
+    bool expectOptionalPunct(char ch)
     {
         skipWhiteSpace();
         bool seen = false;
@@ -159,7 +198,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         return seen;
     }
 
-    bool expectPunct(char ch) nothrow @nogc @safe
+    bool expectPunct(char ch)
     {
         skipWhiteSpace();
         if (!expectChar(ch))
@@ -168,7 +207,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         return true;
     }
 
-    ubyte clamp0to255(int a) nothrow @nogc @safe
+    ubyte clamp0to255(int a) 
     {
         if (a < 0) return 0;
         if (a > 255) return 255;
@@ -176,7 +215,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
     }
 
     // See: https://www.w3.org/TR/css-syntax/#consume-a-number
-    bool parseNumber(double* number, out string error) nothrow @nogc @trusted
+    bool parseNumber(double* number, out string error) @trusted
     {
         char[32] repr;
         int repr_len = 0;
@@ -233,7 +272,9 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
                 next;
             }
         }
-        repr[repr_len++] = '\0'; // force a '\0' to be there, hence rendering sscanf bounded.
+
+        // force a '\0' to be there, making sscanf bounded
+        repr[repr_len++] = '\0'; 
         assert(repr_len <= 32);
 
 
@@ -251,7 +292,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         }
     }
 
-    bool parseColorValue(out float result, out string error) nothrow @nogc @trusted
+    bool parseColorValue(out float result, out string error) @trusted
     {
         double number;
         if (!parseNumber(&number, error))
@@ -263,13 +304,13 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             number *= (255.0 / 100.0);
 
         // No clamping!
-        // "Values outside these ranges are not invalid, but are clamped to the ranges defined 
-        /// here at computed-value time."
+        // "Values outside these ranges are not invalid, but are 
+        // clamped to the ranges defined here at computed-value time."
         result = number;
         return true; 
     }
 
-    bool parseOpacity(out float result, out string error) nothrow @nogc @trusted
+    bool parseOpacity(out float result, out string error) @trusted
     {
         double number;
         if (!parseNumber(&number, error))
@@ -277,7 +318,8 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             return false;
         }
 
-        // "Values outside the range [0,1] are not invalid, but are clamped to that range when computed."
+        // "Values outside the range [0,1] are not invalid, but are 
+        // clamped to that range when computed."
         bool isPercentage = parseChar('%');
         if (isPercentage)
             number *= 0.01;
@@ -286,7 +328,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         return true;
     }
 
-    bool parsePercentage(out double result, out string error) nothrow @nogc @trusted
+    bool parsePercentage(out double result, out string error) @trusted
     {
         double number;
         if (!parseNumber(&number, error))
@@ -300,7 +342,8 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
         return true;
     }
 
-    bool parseHueInDegrees(out double result, out string error) nothrow @nogc @trusted
+    bool parseHueInDegrees(out double result, 
+                           out string error) @trusted
     {
         double num;
         if (!parseNumber(&num, error))
@@ -373,7 +416,7 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
            blue  = cast(ubyte)( (digits[4] << 4) | digits[5]);
            break;
        default:
-           error = "Expected 3, 4, 6 or 8 digit in hexadecimal color literal";
+           error = "Expected 3, 4, 6, or 8 digits in hex literal";
            return false;
        }
        outColor = rgba(red, green, blue, alpha / 255.0f);
@@ -454,7 +497,8 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             error = "Not enough components";
             return false;
         }
-        bool hasClosingParen = expectOptionalPunct(')'); // lack of closing paren is valid
+        // lack of closing paren is valid
+        bool hasClosingParen = expectOptionalPunct(')');
         outColor = rgba(red, green, blue, alpha);
     }
     else if (parseString("hsl"))
@@ -497,13 +541,13 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
     }
     else
     {
-        // Initiate a binary search inside the sorted named color array
-        // See_also: https://en.wikipedia.org/wiki/Binary_search_algorithm
+        // Initiate a binary search inside the sorted named color 
+        // array.
 
         // Current search range
-        // this range will only reduce because the color names are sorted
+        // Will only reduce because the color names are sorted.
         int L = 0;
-        int R = cast(int)(namedColorKeywords.length); 
+        int R = cast(int)(namedColors.length); 
         int charPos = 0;
 
         matchloop:
@@ -515,18 +559,22 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
                 ch += ('a' - 'A');
             if (ch < 'a' || ch > 'z') // not alpha?
             {
-                // Examine all alive cases. Select the one which have matched entirely.               
+                // Examine all alive cases. Select the one which have 
+                // matched entirely.               
                 foreach(candidate; L..R)
                 {
-                    if (namedColorKeywords[candidate].length == charPos)// found it, return as there are no duplicates
+                    // found it, return as there are no duplicates
+                    if (namedColors[candidate].length == charPos)
                     {
-                        // If we have matched all the alpha of the only remaining candidate, we have found a named color
+                        // If we have matched all the alpha of the 
+                        // only remaining candidate, we have found a 
+                        // named color
                         uint uintColor = namedColorValues[candidate];
-                        int red   = (uintColor >> 24) & 0xff;
-                        int green = (uintColor >> 16) & 0xff;
-                        int blue  = (uintColor >>  8) & 0xff;
-                        int alpha = (uintColor >>  0) & 0xff;
-                        outColor = rgba(red, green, blue, alpha / 255.0f);
+                        int r = (uintColor >> 24) & 0xff;
+                        int g = (uintColor >> 16) & 0xff;
+                        int b = (uintColor >>  8) & 0xff;
+                        int a = (uintColor >>  0) & 0xff;
+                        outColor = rgba(r, g, b, a / 255.0f);
                         break matchloop;
                     }
                 }
@@ -543,8 +591,9 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             foreach(candindex; L..R)
             {
                 // Have we found ch in name[charPos] position?
-                string candidate = namedColorKeywords[candindex];
-                bool charIsMatching = (candidate.length > charPos) && (candidate[charPos] == ch);
+                string candidate = namedColors[candindex];
+                bool charIsMatching = (candidate.length > charPos) 
+                                   && (candidate[charPos] == ch);
                 if (!firstFound && charIsMatching)
                 {
                     firstFound = true;
@@ -562,7 +611,8 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
             }
             else
             {
-                // Several candidate remain, go on and reduce the search range
+                // Several candidate remain, go on and reduce the 
+                // search range
                 L = firstFoundIndex;
                 R = lastFoundIndex + 1;
                 charPos += 1;
@@ -584,49 +634,87 @@ bool parseCSSColor(const(char)[] cssColorString, out Color outColor, out string 
 private:
 
 // 147 predefined color + "transparent"
-static immutable string[147 + 1] namedColorKeywords =
+static immutable string[147 + 1] namedColors =
 [
-    "aliceblue", "antiquewhite", "aqua", "aquamarine",     "azure", "beige", "bisque", "black",
-    "blanchedalmond", "blue", "blueviolet", "brown",       "burlywood", "cadetblue", "chartreuse", "chocolate",
-    "coral", "cornflowerblue", "cornsilk", "crimson",      "cyan", "darkblue", "darkcyan", "darkgoldenrod",
-    "darkgray", "darkgreen", "darkgrey", "darkkhaki",      "darkmagenta", "darkolivegreen", "darkorange", "darkorchid",
-    "darkred","darksalmon","darkseagreen","darkslateblue", "darkslategray", "darkslategrey", "darkturquoise", "darkviolet",
-    "deeppink", "deepskyblue", "dimgray", "dimgrey",       "dodgerblue", "firebrick", "floralwhite", "forestgreen",
-    "fuchsia", "gainsboro", "ghostwhite", "gold",          "goldenrod", "gray", "green", "greenyellow",
-    "grey", "honeydew", "hotpink", "indianred",            "indigo", "ivory", "khaki", "lavender",
-    "lavenderblush","lawngreen","lemonchiffon","lightblue","lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray",
-    "lightgreen", "lightgrey", "lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightslategrey",
-    "lightsteelblue", "lightyellow", "lime", "limegreen",  "linen", "magenta", "maroon", "mediumaquamarine",
-    "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise", "mediumvioletred",
-    "midnightblue", "mintcream", "mistyrose", "moccasin",  "navajowhite", "navy", "oldlace", "olive",
-    "olivedrab", "orange", "orangered",  "orchid",         "palegoldenrod", "palegreen", "paleturquoise", "palevioletred",
-    "papayawhip", "peachpuff", "peru", "pink",             "plum", "powderblue", "purple", "red",
-    "rosybrown", "royalblue", "saddlebrown", "salmon",     "sandybrown", "seagreen", "seashell", "sienna",
-    "silver", "skyblue", "slateblue", "slategray",         "slategrey", "snow", "springgreen", "steelblue",
-    "tan", "teal", "thistle", "tomato",                    "transparent", "turquoise", "violet", "wheat", 
+    "aliceblue", "antiquewhite", "aqua", "aquamarine",     
+    "azure", "beige", "bisque", "black",
+    "blanchedalmond", "blue", "blueviolet", "brown",       
+    "burlywood", "cadetblue", "chartreuse", "chocolate",
+    "coral", "cornflowerblue", "cornsilk", "crimson",      
+    "cyan", "darkblue", "darkcyan", "darkgoldenrod",
+    "darkgray", "darkgreen", "darkgrey", "darkkhaki",      
+    "darkmagenta", "darkolivegreen", "darkorange", "darkorchid",
+    "darkred","darksalmon","darkseagreen","darkslateblue", 
+    "darkslategray", "darkslategrey", "darkturquoise", "darkviolet",
+    "deeppink", "deepskyblue", "dimgray", "dimgrey",       
+    "dodgerblue", "firebrick", "floralwhite", "forestgreen",
+    "fuchsia", "gainsboro", "ghostwhite", "gold",          
+    "goldenrod", "gray", "green", "greenyellow",
+    "grey", "honeydew", "hotpink", "indianred",            
+    "indigo", "ivory", "khaki", "lavender",
+    "lavenderblush","lawngreen","lemonchiffon","lightblue",
+    "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray",
+    "lightgreen", "lightgrey", "lightpink", "lightsalmon", 
+    "lightseagreen", "lightskyblue", "lightslategray", 
+                                                     "lightslategrey",
+    "lightsteelblue", "lightyellow", "lime", "limegreen",  
+    "linen", "magenta", "maroon", "mediumaquamarine",
+    "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen", 
+    "mediumslateblue", "mediumspringgreen", "mediumturquoise", 
+                                                    "mediumvioletred",
+    "midnightblue", "mintcream", "mistyrose", "moccasin",  
+    "navajowhite", "navy", "oldlace", "olive",
+    "olivedrab", "orange", "orangered",  "orchid",         
+    "palegoldenrod", "palegreen", "paleturquoise", "palevioletred",
+    "papayawhip", "peachpuff", "peru", "pink",             
+    "plum", "powderblue", "purple", "red",
+    "rosybrown", "royalblue", "saddlebrown", "salmon",     
+    "sandybrown", "seagreen", "seashell", "sienna",
+    "silver", "skyblue", "slateblue", "slategray",         
+    "slategrey", "snow", "springgreen", "steelblue",
+    "tan", "teal", "thistle", "tomato",                    
+    "transparent", "turquoise", "violet", "wheat", 
     "white", "whitesmoke", "yellow", "yellowgreen"
 ];
 
 immutable static uint[147 + 1] namedColorValues =
 [
-    0xf0f8ffff, 0xfaebd7ff, 0x00ffffff, 0x7fffd4ff, 0xf0ffffff, 0xf5f5dcff, 0xffe4c4ff, 0x000000ff, 
-    0xffebcdff, 0x0000ffff, 0x8a2be2ff, 0xa52a2aff, 0xdeb887ff, 0x5f9ea0ff, 0x7fff00ff, 0xd2691eff, 
-    0xff7f50ff, 0x6495edff, 0xfff8dcff, 0xdc143cff, 0x00ffffff, 0x00008bff, 0x008b8bff, 0xb8860bff, 
-    0xa9a9a9ff, 0x006400ff, 0xa9a9a9ff, 0xbdb76bff, 0x8b008bff, 0x556b2fff, 0xff8c00ff, 0x9932ccff, 
-    0x8b0000ff, 0xe9967aff, 0x8fbc8fff, 0x483d8bff, 0x2f4f4fff, 0x2f4f4fff, 0x00ced1ff, 0x9400d3ff, 
-    0xff1493ff, 0x00bfffff, 0x696969ff, 0x696969ff, 0x1e90ffff, 0xb22222ff, 0xfffaf0ff, 0x228b22ff, 
-    0xff00ffff, 0xdcdcdcff, 0xf8f8ffff, 0xffd700ff, 0xdaa520ff, 0x808080ff, 0x008000ff, 0xadff2fff, 
-    0x808080ff, 0xf0fff0ff, 0xff69b4ff, 0xcd5c5cff, 0x4b0082ff, 0xfffff0ff, 0xf0e68cff, 0xe6e6faff, 
-    0xfff0f5ff, 0x7cfc00ff, 0xfffacdff, 0xadd8e6ff, 0xf08080ff, 0xe0ffffff, 0xfafad2ff, 0xd3d3d3ff, 
-    0x90ee90ff, 0xd3d3d3ff, 0xffb6c1ff, 0xffa07aff, 0x20b2aaff, 0x87cefaff, 0x778899ff, 0x778899ff, 
-    0xb0c4deff, 0xffffe0ff, 0x00ff00ff, 0x32cd32ff, 0xfaf0e6ff, 0xff00ffff, 0x800000ff, 0x66cdaaff, 
-    0x0000cdff, 0xba55d3ff, 0x9370dbff, 0x3cb371ff, 0x7b68eeff, 0x00fa9aff, 0x48d1ccff, 0xc71585ff, 
-    0x191970ff, 0xf5fffaff, 0xffe4e1ff, 0xffe4b5ff, 0xffdeadff, 0x000080ff, 0xfdf5e6ff, 0x808000ff, 
-    0x6b8e23ff, 0xffa500ff, 0xff4500ff, 0xda70d6ff, 0xeee8aaff, 0x98fb98ff, 0xafeeeeff, 0xdb7093ff, 
-    0xffefd5ff, 0xffdab9ff, 0xcd853fff, 0xffc0cbff, 0xdda0ddff, 0xb0e0e6ff, 0x800080ff, 0xff0000ff, 
-    0xbc8f8fff, 0x4169e1ff, 0x8b4513ff, 0xfa8072ff, 0xf4a460ff, 0x2e8b57ff, 0xfff5eeff, 0xa0522dff,
-    0xc0c0c0ff, 0x87ceebff, 0x6a5acdff, 0x708090ff, 0x708090ff, 0xfffafaff, 0x00ff7fff, 0x4682b4ff, 
-    0xd2b48cff, 0x008080ff, 0xd8bfd8ff, 0xff6347ff, 0x00000000,  0x40e0d0ff, 0xee82eeff, 0xf5deb3ff, 
+    0xf0f8ffff, 0xfaebd7ff, 0x00ffffff, 0x7fffd4ff, 
+    0xf0ffffff, 0xf5f5dcff, 0xffe4c4ff, 0x000000ff, 
+    0xffebcdff, 0x0000ffff, 0x8a2be2ff, 0xa52a2aff, 
+    0xdeb887ff, 0x5f9ea0ff, 0x7fff00ff, 0xd2691eff, 
+    0xff7f50ff, 0x6495edff, 0xfff8dcff, 0xdc143cff, 
+    0x00ffffff, 0x00008bff, 0x008b8bff, 0xb8860bff, 
+    0xa9a9a9ff, 0x006400ff, 0xa9a9a9ff, 0xbdb76bff, 
+    0x8b008bff, 0x556b2fff, 0xff8c00ff, 0x9932ccff, 
+    0x8b0000ff, 0xe9967aff, 0x8fbc8fff, 0x483d8bff, 
+    0x2f4f4fff, 0x2f4f4fff, 0x00ced1ff, 0x9400d3ff, 
+    0xff1493ff, 0x00bfffff, 0x696969ff, 0x696969ff, 
+    0x1e90ffff, 0xb22222ff, 0xfffaf0ff, 0x228b22ff, 
+    0xff00ffff, 0xdcdcdcff, 0xf8f8ffff, 0xffd700ff, 
+    0xdaa520ff, 0x808080ff, 0x008000ff, 0xadff2fff, 
+    0x808080ff, 0xf0fff0ff, 0xff69b4ff, 0xcd5c5cff, 
+    0x4b0082ff, 0xfffff0ff, 0xf0e68cff, 0xe6e6faff, 
+    0xfff0f5ff, 0x7cfc00ff, 0xfffacdff, 0xadd8e6ff, 
+    0xf08080ff, 0xe0ffffff, 0xfafad2ff, 0xd3d3d3ff, 
+    0x90ee90ff, 0xd3d3d3ff, 0xffb6c1ff, 0xffa07aff, 
+    0x20b2aaff, 0x87cefaff, 0x778899ff, 0x778899ff, 
+    0xb0c4deff, 0xffffe0ff, 0x00ff00ff, 0x32cd32ff, 
+    0xfaf0e6ff, 0xff00ffff, 0x800000ff, 0x66cdaaff, 
+    0x0000cdff, 0xba55d3ff, 0x9370dbff, 0x3cb371ff, 
+    0x7b68eeff, 0x00fa9aff, 0x48d1ccff, 0xc71585ff, 
+    0x191970ff, 0xf5fffaff, 0xffe4e1ff, 0xffe4b5ff, 
+    0xffdeadff, 0x000080ff, 0xfdf5e6ff, 0x808000ff, 
+    0x6b8e23ff, 0xffa500ff, 0xff4500ff, 0xda70d6ff, 
+    0xeee8aaff, 0x98fb98ff, 0xafeeeeff, 0xdb7093ff, 
+    0xffefd5ff, 0xffdab9ff, 0xcd853fff, 0xffc0cbff, 
+    0xdda0ddff, 0xb0e0e6ff, 0x800080ff, 0xff0000ff, 
+    0xbc8f8fff, 0x4169e1ff, 0x8b4513ff, 0xfa8072ff, 
+    0xf4a460ff, 0x2e8b57ff, 0xfff5eeff, 0xa0522dff,
+    0xc0c0c0ff, 0x87ceebff, 0x6a5acdff, 0x708090ff, 
+    0x708090ff, 0xfffafaff, 0x00ff7fff, 0x4682b4ff, 
+    0xd2b48cff, 0x008080ff, 0xd8bfd8ff, 0xff6347ff, 
+    0x00000000,  0x40e0d0ff, 0xee82eeff, 0xf5deb3ff, 
     0xffffffff, 0xf5f5f5ff, 0xffff00ff, 0x9acd32ff,
 ];
 
@@ -648,19 +736,20 @@ unittest
     bool testParse(string color, ubyte[4] correct)
     {
         Color parsed;
-        RGBA8 correctC = RGBA8(correct[0], correct[1], correct[2], correct[3]);
+        RGBA8 C = RGBA8(correct[0], correct[1], 
+                         correct[2], correct[3]);
         string error;
 
         if (parseCSSColor(color, parsed, error))
         {
             RGBA8 srgb = parsed.toRGBA8(); 
-            if (srgb != correctC)
+            if (srgb != C)
             {
-                printf("Error: got %d,%d,%d,%d instead of %d,%d,%d,%d.\n",
+                printf("Error: got %d,%d,%d,%d not %d,%d,%d,%d.\n",
                        srgb.r, srgb.g, srgb.b, srgb.a,
-                       correctC.r, correctC.g, correctC.b, correctC.a);
+                       C.r, C.g, C.b, C.a);
             }
-            return srgb == correctC;
+            return srgb == C;
         }
         else
         {
@@ -682,20 +771,32 @@ unittest
     assert(doesntParse("#012345678"));
 
     // rgb() and rgba()
-    assert(testParse("  rgba( 14.01, 25.0e+0%, 16, 0.5)  " , [14, 64, 16, 128]));
-    assert(testParse("rgb(10e3,112,-3.4e-2)"               , [255, 112, 0, 255]));
+    assert(testParse("  rgba( 14.01, 25.0e+0%, 16, 0.5)  " , 
+        [14, 64, 16, 128]));
+    assert(testParse("rgb(10e3,112,-3.4e-2)"               , 
+        [255, 112, 0, 255]));
 
     // hsl() and hsla()
-    assert(testParse("hsl(0   ,  100%, 50%)"         , [255, 0, 0, 255]));
-    assert(testParse("hsl(720,  100%, 50%)"          , [255, 0, 0, 255]));
-    assert(testParse("hsl(180deg,  100%, 50%)"       , [0, 255, 255, 255]));
-    assert(testParse("hsl(0grad, 100%, 50%)"         , [255, 0, 0, 255]));
-    assert(testParse("hsl(0rad,  100%, 50%)"         , [255, 0, 0, 255]));
-    assert(testParse("hsl(0turn, 100%, 50%)"         , [255, 0, 0, 255]));
-    assert(testParse("hsl(120deg, 100%, 50%)"        , [0, 255, 0, 255]));
-    assert(testParse("hsl(123deg,   2.5%, 0%)"       , [0, 0, 0, 255]));
-    assert(testParse("hsl(5.4e-5rad, 25%, 100%)"     , [255, 255, 255, 255]));
-    assert(testParse("hsla(0turn, 100%, 50%, 0.25)"  , [255, 0, 0, 64]));
+    assert(testParse("hsl(0   ,  100%, 50%)"         , 
+        [255, 0, 0, 255]));
+    assert(testParse("hsl(720,  100%, 50%)"          , 
+        [255, 0, 0, 255]));
+    assert(testParse("hsl(180deg,  100%, 50%)"       , 
+        [0, 255, 255, 255]));
+    assert(testParse("hsl(0grad, 100%, 50%)"         , 
+        [255, 0, 0, 255]));
+    assert(testParse("hsl(0rad,  100%, 50%)"         , 
+        [255, 0, 0, 255]));
+    assert(testParse("hsl(0turn, 100%, 50%)"         , 
+        [255, 0, 0, 255]));
+    assert(testParse("hsl(120deg, 100%, 50%)"        , 
+        [0, 255, 0, 255]));
+    assert(testParse("hsl(123deg,   2.5%, 0%)"       , 
+        [0, 0, 0, 255]));
+    assert(testParse("hsl(5.4e-5rad, 25%, 100%)"     , 
+        [255, 255, 255, 255]));
+    assert(testParse("hsla(0turn, 100%, 50%, 0.25)"  , 
+        [255, 0, 0, 64]));
 
     // gray values
     assert(testParse(" gray( +0.0% )"       , [0, 0, 0, 255]));
@@ -706,20 +807,21 @@ unittest
     assert(testParse("tRaNsPaREnt"  , [0, 0, 0, 0]));
     assert(testParse(" navy "  , [0, 0, 128, 255]));
     assert(testParse("lightgoldenrodyellow"  , [250, 250, 210, 255]));
-    assert(doesntParse("animaginarycolorname")); // unknown named color
+    assert(doesntParse("animaginarycolorname")); // unknown name
     assert(doesntParse("navyblahblah")); // too much chars
     assert(doesntParse("blac")); // incomplete color
-    assert(testParse("lime"  , [0, 255, 0, 255])); // termination with 2 candidate alive
+    assert(testParse("lime"  , [0, 255, 0, 255])); // 2 candidates
     assert(testParse("limegreen"  , [50, 205, 50, 255]));    
 }
 
 // <copied from dplug:core to avoid a dependency>
 
-/// C-locale independent string to float parsing.
-/// Params:
-///     s Must be a zero-terminated string.
-///     mustConsumeEntireInput if true, check that s is entirely consumed by parsing the number.
-///     err: optional bool
+// C-locale independent string to float parsing.
+// Params:
+//     s Must be a zero-terminated string.
+//     mustConsumeEntireInput if true, check that s is entirely 
+//     consumed by parsing the number.
+//     err: optional bool
 public double convertStringToDouble(const(char)* s, 
                                     bool mustConsumeEntireInput,
                                     bool* err) pure nothrow @nogc
@@ -732,7 +834,8 @@ public double convertStringToDouble(const(char)* s,
 
     const(char)* end;
     bool strtod_err = false;
-    double r = stb__clex_parse_number_literal(s, &end, &strtod_err, true);
+    double r = stb__clex_parse_number_literal(s, &end, 
+        &strtod_err, true);
 
     if (strtod_err)
     {
@@ -754,10 +857,10 @@ public double convertStringToDouble(const(char)* s,
     return r;
 }
 
-private double stb__clex_parse_number_literal(const(char)* p, 
-                                              const(char)**q, 
-                                              bool* err,
-                                              bool allowFloat) pure nothrow @nogc
+double stb__clex_parse_number_literal(const(char)* p, 
+                                      const(char)**q, 
+                                      bool* err,
+                                      bool allowFloat) pure
 {
     const(char)* s = p;
     double value=0;
@@ -769,7 +872,8 @@ private double stb__clex_parse_number_literal(const(char)* p,
     while (true)
     {
         char ch = *p;
-        if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\f' || ch == '\r')
+        if (ch == ' ' || ch == '\t' || ch == '\r' 
+            || ch == '\n' || ch == '\f' || ch == '\r')
         {
             p += 1;
         }
@@ -829,7 +933,8 @@ private double stb__clex_parse_number_literal(const(char)* p,
             value += addend / pow;
         }
         if (base == 16) {
-            // exponent required for hex float literal, else it's an integer literal like 0x123
+            // exponent required for hex float literal, 
+            // else it's an integer literal like 0x123
             exponent = (*p == 'p' || *p == 'P');
         } else
             exponent = (*p == 'e' || *p == 'E');
@@ -871,7 +976,7 @@ private double stb__clex_parse_number_literal(const(char)* p,
     return value;
 }
 
-private double stb__clex_pow(double base, uint exponent) pure nothrow @nogc
+double stb__clex_pow(double base, uint exponent) pure
 {
     double value=1;
     for ( ; exponent; exponent >>= 1) {

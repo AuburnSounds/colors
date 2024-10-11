@@ -1,28 +1,29 @@
 /**
-* Conversions, intended for internal library usage.
-*
-* Copyright: Copyright Guillaume Piolat 2023.
-* License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, Boost License 1.0)
+    Conversions, intended for internal library usage.
+  
+    Copyright: Copyright Guillaume Piolat 2023-2024.
+    License:   $(LINK2 http://www.boost.org/LICENSE_1_0.txt, BSL-1.0)
 */
 module colors.conversions;
-
 
 import colors.types;
 import colors.colorspace;
 
-// This is for internal use.
+// This is for internal use only.
 
 pure nothrow @nogc @safe:
 
-/// Converting HSL to sRGB.
-/// Params: 
-///    hue Hue as degrees 0..360.
-///    sat Saturation as 0..1.0f.
-///    light Lightness as 0..1.0f.
-/// Reference: https://www.w3.org/TR/css-color-4/#hsl-to-rgb
+// Converting HSL to sRGB.
+// Params: 
+//    hue Hue as degrees 0..360.
+//    sat Saturation as 0..1.0f.
+//    light Lightness as 0..1.0f.
+// Reference: https://www.w3.org/TR/css-color-4/#hsl-to-rgb
 float[3] hslToRgb(float hue, float sat, float light) 
 {
-    assert(hue >= -360 && hue <= 720.0f); // blerg, where to lift that limitation?
+    // blerg, TODO where to lift that limitation?
+    assert(hue >= -360 && hue <= 720.0f); 
+
     assert(sat >= 0.0f && sat <= 1.0f);
     assert(light >= 0.0f && light <= 1.0f);
 
@@ -79,8 +80,8 @@ float[3] rgbToHsl (float red, float green, float blue)
             sat = 0;
         else
         {
-            float one_minus_light = 1.0f - light;
-            float mm = (light < one_minus_light) ? light : one_minus_light;
+            float one_m_light = 1.0f - light;
+            float mm = (light < one_m_light) ? light : one_m_light;
             sat = d / mm;
         }
         if (max == red)
@@ -103,7 +104,8 @@ float[3] rgbToHsl (float red, float green, float blue)
 }
 
 
-Colorspace getIntermediateColorspace(Colorspace source, Colorspace target) pure
+Colorspace getIntermediateColorspace(Colorspace source, 
+                                     Colorspace target)
 {
     with(Colorspace)
     {
@@ -150,7 +152,8 @@ Color convertToIntermediate(Color c, Colorspace target) @trusted
                 break;
 
             case hslaf32:
-                // TODO: read in CSS what to do with large hue values, or NaN values, here.
+                // TODO: read in CSS what to do with large hue values, 
+                // or NaN values, here.
                 float[3] rgb = hslToRgb(c._HSLAf.h, c._HSLAf.s, c._HSLAf.l);                
                 r._RGBAf.r = rgb[0];
                 r._RGBAf.g = rgb[1];
@@ -197,10 +200,10 @@ Color convertFromIntermediate(Color c, Colorspace target) @trusted
             switch(target)
             {
                 case rgba8:
-                    r._RGBA8.r = cast(ubyte)(0.5f + 255.0f * c._RGBAf.r);
-                    r._RGBA8.g = cast(ubyte)(0.5f + 255.0f * c._RGBAf.g);
-                    r._RGBA8.b = cast(ubyte)(0.5f + 255.0f * c._RGBAf.b);
-                    r._RGBA8.a = cast(ubyte)(0.5f + 255.0f * c._RGBAf.a);
+                    r._RGBA8.r = cast(ubyte)(0.5f+255.0f*c._RGBAf.r);
+                    r._RGBA8.g = cast(ubyte)(0.5f+255.0f*c._RGBAf.g);
+                    r._RGBA8.b = cast(ubyte)(0.5f+255.0f*c._RGBAf.b);
+                    r._RGBA8.a = cast(ubyte)(0.5f+255.0f*c._RGBAf.a);
                     break;
 
                 case rgbaf32:
@@ -224,13 +227,13 @@ Color convertFromIntermediate(Color c, Colorspace target) @trusted
     return r;
 }
 
-void clamp_0_1(ref float x) pure
+void clamp_0_1(ref float x)
 {
     if (x < 0) x = 0;
     if (x > 1) x = 1;
 }
 
-void clamp_0_255(ref float x) pure
+void clamp_0_255(ref float x)
 {
     if (x < 0) x = 0;
     if (x > 255) x = 255;
