@@ -21,7 +21,7 @@ import colors.conversions;
 
     See_also: `parseCSSColor`.
 */
-Color color(const(char)[] cssColorString) nothrow @nogc @safe
+Color color(const(char)[] cssColorString) pure nothrow @nogc @safe
 {
     Color c;
     string err;
@@ -82,7 +82,7 @@ unittest
 */
 bool parseCSSColor(const(char)[] cssColorString, 
                    out Color outColor, 
-                   out string error) nothrow @nogc @safe
+                   out string error) pure nothrow @nogc @safe
 {
 
     error = null; // indicate success

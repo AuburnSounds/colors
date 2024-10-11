@@ -9,6 +9,7 @@ module colors.types;
 //import std.math;
 import colors.conversions;
 import colors.colorspace;
+import colors.parser;
 
 
 pure nothrow @nogc @safe:
@@ -43,6 +44,14 @@ pure nothrow @nogc @safe:
 
         RGBAf _RGBAf;
         HSLAf _HSLAf;
+    }
+
+    /** 
+        Build from CSS color string.
+    */
+    this(const(char)[] cssColor)
+    {
+        this = color(cssColor);
     }
 
     /**
@@ -85,6 +94,10 @@ private:
         storage, but for intermediate computation and user experience.
     */
     Colorspace _colorspace; 
+}
+unittest
+{
+    Color c = Color("cyan");
 }
 
 
