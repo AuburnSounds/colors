@@ -2,5 +2,5 @@
     "name": "colors",
     "license": "BSL-1.0",
 
-    "description": "A color library that implement roughly CSS colors.",
+    "description": "A color library that implement CSS colors.",
 }
