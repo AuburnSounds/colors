@@ -14,7 +14,6 @@ import core.stdc.string: strlen;
 import colors.types;
 import colors.colorspace;
 import colors.conversions;
-//import dplug.core.string;
 
 /// Parses a CSS color string, and gives back a `Color`.
 ///
