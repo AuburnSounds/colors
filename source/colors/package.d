@@ -14,11 +14,3 @@ public import colors.types;
 public import colors.colorspace;
 public import colors.parser;
 
-
-
-/*
-bool isRectangularColorSpace(CSSColorspace colorspace) pure
-{
-
-}
-*/
