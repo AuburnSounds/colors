@@ -22,7 +22,7 @@ sRGB forever._
   CSS recommendations.
 
 
-## Parsing a color strinc
+## Parsing a color string
 
 ```d
 import colors;
@@ -34,4 +34,9 @@ if (parseCSSColor(str, c, err)) {
 }
 else
     throw new Exception(err);
+
+// fail-safe version, return transparent black if error
+c = color(str);
+
+
 ```

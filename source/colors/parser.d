@@ -30,6 +30,12 @@ Color color(const(char)[] cssColorString) nothrow @nogc @safe
     else
         return c.init;
 }
+unittest
+{
+    Color c;
+    assert(color("invalidname") == Color.init);
+    assert(color("red").toRGBA8() == RGBA8(255, 0, 0, 255));
+}
 
 
 /**
@@ -78,13 +84,12 @@ bool parseCSSColor(const(char)[] cssColorString,
                    out Color outColor, 
                    out string error) nothrow @nogc @safe
 {
-nothrow @nogc @safe:
 
     error = null; // indicate success
     const(char)[] s = cssColorString;   
     int index = 0;    
 
-    char peek()
+    char peek() nothrow @nogc @safe
     {
         if (index >= cssColorString.length)
             return '\0';
@@ -92,12 +97,12 @@ nothrow @nogc @safe:
             return s[index];
     }
 
-    void next()
+    void next() nothrow @nogc @safe
     {
         index++;
     }
 
-    bool parseChar(char ch)
+    bool parseChar(char ch) nothrow @nogc @safe
     {
         if (peek() == ch)
         {
@@ -107,14 +112,14 @@ nothrow @nogc @safe:
         return false;
     }
 
-    bool expectChar(char ch) 
+    bool expectChar(char ch) nothrow @nogc @safe
     {
         if (!parseChar(ch))
             return false;
         return true;
     }
 
-    bool parseString(string s)
+    bool parseString(string s) nothrow @nogc @safe
     {
         int save = index;
 
@@ -129,18 +134,18 @@ nothrow @nogc @safe:
         return true;
     }
 
-    bool isWhite(char ch)
+    bool isWhite(char ch) nothrow @nogc @safe
     {
         return ch == ' '  || ch == '\n' || ch == '\r' 
             || ch == '\t' || ch == '\r';
     }
 
-    bool isDigit(char ch)
+    bool isDigit(char ch) nothrow @nogc @safe
     {
         return ch >= '0' && ch <= '9';
     }
 
-    bool expectDigit(out char digit)
+    bool expectDigit(out char digit) nothrow @nogc @safe
     {
         char ch = peek();
         if (isDigit(ch))
@@ -154,6 +159,7 @@ nothrow @nogc @safe:
     }
 
     bool parseHexDigit(out int digit)
+        nothrow @nogc @safe
     {
         char ch = peek();
         if (isDigit(ch))
@@ -178,13 +184,13 @@ nothrow @nogc @safe:
             return false;
     }
 
-    void skipWhiteSpace()
+    void skipWhiteSpace() nothrow @nogc @safe
     {       
         while (isWhite(peek()))
             next;
     }
 
-    bool expectOptionalPunct(char ch)
+    bool expectOptionalPunct(char ch) nothrow @nogc @safe
     {
         skipWhiteSpace();
         bool seen = false;
@@ -198,7 +204,7 @@ nothrow @nogc @safe:
         return seen;
     }
 
-    bool expectPunct(char ch)
+    bool expectPunct(char ch) nothrow @nogc @safe
     {
         skipWhiteSpace();
         if (!expectChar(ch))
@@ -207,7 +213,7 @@ nothrow @nogc @safe:
         return true;
     }
 
-    ubyte clamp0to255(int a) 
+    ubyte clamp0to255(int a) nothrow @nogc @safe
     {
         if (a < 0) return 0;
         if (a > 255) return 255;
@@ -216,6 +222,7 @@ nothrow @nogc @safe:
 
     // See: https://www.w3.org/TR/css-syntax/#consume-a-number
     bool parseNumber(double* number, out string error) @trusted
+        nothrow @nogc
     {
         char[32] repr;
         int repr_len = 0;
@@ -293,6 +300,7 @@ nothrow @nogc @safe:
     }
 
     bool parseColorValue(out float result, out string error) @trusted
+        nothrow @nogc
     {
         double number;
         if (!parseNumber(&number, error))
@@ -311,6 +319,7 @@ nothrow @nogc @safe:
     }
 
     bool parseOpacity(out float result, out string error) @trusted
+        nothrow @nogc
     {
         double number;
         if (!parseNumber(&number, error))
@@ -329,6 +338,7 @@ nothrow @nogc @safe:
     }
 
     bool parsePercentage(out double result, out string error) @trusted
+        nothrow @nogc
     {
         double number;
         if (!parseNumber(&number, error))
@@ -344,6 +354,7 @@ nothrow @nogc @safe:
 
     bool parseHueInDegrees(out double result, 
                            out string error) @trusted
+        nothrow @nogc
     {
         double num;
         if (!parseNumber(&num, error))
@@ -630,7 +641,6 @@ nothrow @nogc @safe:
     return true;
 }
 
-
 private:
 
 // 147 predefined color + "transparent"
@@ -860,7 +870,8 @@ public double convertStringToDouble(const(char)* s,
 double stb__clex_parse_number_literal(const(char)* p, 
                                       const(char)**q, 
                                       bool* err,
-                                      bool allowFloat) pure
+                                      bool allowFloat) 
+    pure nothrow @nogc 
 {
     const(char)* s = p;
     double value=0;
@@ -977,6 +988,7 @@ double stb__clex_parse_number_literal(const(char)* p,
 }
 
 double stb__clex_pow(double base, uint exponent) pure
+    nothrow @nogc
 {
     double value=1;
     for ( ; exponent; exponent >>= 1) {

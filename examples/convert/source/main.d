@@ -1,7 +1,11 @@
 import colors;
 
-void main()
+void main(string[] args)
 {
-	Color c = rgb(244, 233, 199);
+	foreach(arg; args[1..$]) 
+	{
+		
+		Color c = rgb(244, 233, 199);
+	}
 	
 }
