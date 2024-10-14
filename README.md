@@ -21,7 +21,6 @@ end-goal is to be ready for more conversions than just staying sRGB forever. Col
 - 🎨 See `test-suite/` for exact syntax supported, the goal is to follow 
   CSS recommendations.
 
-
 ## Tip: Parsing a color string
 
 ```d
@@ -30,6 +29,14 @@ import colors;
 // Quick way:
 Color c = color("red");
 Color c = Color("blue"); // also works
+
+// CSS support (WIP)
+c = color("#ab9");
+c = color("#0f1c4A43");
+c = color("rgba(14.01, 25.0e+0%, 16, 0.5)");
+c = color("hsl(180deg, 100%, 50%)");
+c = color("gray(100%, 50%)");
+c = color("lightgoldenrodyellow");
 
 // More correct way:
 string err;
