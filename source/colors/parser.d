@@ -43,6 +43,8 @@ unittest
    
     Params:
         cssColorString = A CSS string describing a color.
+        outColor       = Output color.
+        error          = Error message. `null` on success.
    
     Returns:
         A specified Color, that keeps the intent of the user. 
@@ -60,7 +62,7 @@ unittest
     // all HTML named colors
     parseCSSColor("black", color, error);
     
-    // hex colors including alpha versions                      
+    // hex colors including alpha versions
     parseCSSColor("#fe85dc", color, error);
 
     // alpha                    

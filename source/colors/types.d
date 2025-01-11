@@ -15,9 +15,9 @@ import colors.parser;
 pure nothrow @nogc @safe:
 
 
-/** 
-    The Color type is a tagged union that can hold one color in a 
-    CSS-defined colorspace. This correspond to both "specified", 
+/**
+    The Color type is a tagged union that can hold one color in a
+    CSS-defined colorspace. This correspond to both "specified",
     "computed", and "used" colors in CSS specification.
     In typical use, you'll want to map to sRGB 32-bit RGBA quadruplet,
     and the function for this is called: `toRGBA8()`.
@@ -26,8 +26,8 @@ pure nothrow @nogc @safe:
 struct Color
 {
 pure nothrow @nogc @safe:
-    
-    // Note: accessing these representation is dangerous, only one of 
+
+    // Note: accessing these representation is dangerous, only one of
     // them is meaningful according to `colorspace`.
     union
     {
@@ -36,18 +36,18 @@ pure nothrow @nogc @safe:
         RGBA16 _RGBA16;
 
         // CSS spec recommends:
-        // "(16bit, half-float, or float per component is recommended 
-        // for internal storage). 
+        // "(16bit, half-float, or float per component is recommended
+        // for internal storage).
         // Values must be rounded towards +∞, not truncated."
         // CSS-compatible types below, with more precision.
-        // Note that the CSS types can contain NaN, unlike the 
+        // Note that the CSS types can contain NaN, unlike the
         // efficient representations, and it's meaningful.
 
         RGBAf _RGBAf;
         HSLAf _HSLAf;
     }
 
-    /** 
+    /**
         Build from CSS color string.
     */
     this(const(char)[] cssColor)
@@ -55,7 +55,7 @@ pure nothrow @nogc @safe:
         this = color(cssColor);
     }
 
-    /** 
+    /**
         Build from a 8-bit sRGB quadruplet.
     */
     this(RGBA8 c)
@@ -64,7 +64,7 @@ pure nothrow @nogc @safe:
         this._colorspace = Colorspace.rgba8;
     }
 
-    /** 
+    /**
         Build from a 16-bit sRGB quadruplet.
     */
     this(RGBA16 c)
@@ -74,7 +74,7 @@ pure nothrow @nogc @safe:
     }
 
 
-    /** 
+    /**
         Build from a 32-bit float sRGB quadruplet.
     */
     this(RGBAf c)
@@ -99,7 +99,7 @@ pure nothrow @nogc @safe:
         _colorspace = colorspace;
     }
 
-    /** 
+    /**
         Returns: A 8-bit tristimulus sRGB color, with alpha.
     */
     RGBA8 toRGBA8() const
@@ -108,7 +108,7 @@ pure nothrow @nogc @safe:
         return c._RGBA8;
     }
 
-    /** 
+    /**
         Returns: A 16-bit tristimulus sRGB color, with alpha.
     */
     RGBA16 toRGBA16() const
@@ -117,7 +117,7 @@ pure nothrow @nogc @safe:
         return c._RGBA16;
     }
 
-    /** 
+    /**
         A 32-bit float normalized tristimulus sRGB color, with alpha.
     */
     RGBAf toRGBAf() const
@@ -128,10 +128,10 @@ pure nothrow @nogc @safe:
 
 private:
     /**
-        Colorspace in the type. Which means `Color` is not meant for 
+        Colorspace in the type. Which means `Color` is not meant for
         storage, but for intermediate computation and user experience.
     */
-    Colorspace _colorspace; 
+    Colorspace _colorspace;
 }
 unittest
 {
@@ -141,18 +141,18 @@ unittest
 
 /**
     The `rgb` function is the same as in CSS color specifications.
-   
+
     Expected values ranges from 0 to 255.
-   
-    Instead of being either numbers or percentages, all values here 
-    are assumed to be numbers from 0 to 255. However, internally the 
+
+    Instead of being either numbers or percentages, all values here
+    are assumed to be numbers from 0 to 255. However, internally the
     color will be stored with higher accuracy, as per CSS spec.
-   
+
     Params:
-      red    Red value in 0 to 255.0f.
-      green  Green value in 0 to 255.0f.
-      blue   Blue value in 0 to 255.0f.
-      alpha  Alpha value in 0 to 1.0f (opacity).
+      red   = Red value in 0 to 255.0f.
+      green = Green value in 0 to 255.0f.
+      blue  = Blue value in 0 to 255.0f.
+      alpha = Alpha value in 0 to 1.0f (opacity).
 */
 Color rgb(float red, float green, float blue, float alpha = 1.0f)
 {
@@ -170,28 +170,28 @@ Color rgb(float red, float green, float blue, float alpha = 1.0f)
 }
 
 
-/** 
-    In CSS, the `rgba` function is simply in alias of `rgb`. You can 
+/**
+    In CSS, the `rgba` function is simply in alias of `rgb`. You can
     specify an alpha to `rgb`, or omit it with `rgba`.
 */
 alias rgba = rgb;
 
 
-/** 
+/**
     The `hsl` function is the same as in CSS color specifications.
-   
+
     Expected values ranges from 0 to 255.
-   
+
     Params:
-      hueDegrees Hue value (0 = red, 60 = yellow, 240 = blue). 
-                 Can wrap around.
-      sat        Saturation value in 0 to 1.0f.
-      light      Light value in 0 to 1.0f.
-      alpha      Alpha value in 0 to 1.0f (opacity).
+      hueDegrees = Hue value (0 = red, 60 = yellow, 240 = blue).
+                 = Can wrap around.
+      sat        = Saturation value in 0 to 1.0f.
+      light      = Light value in 0 to 1.0f.
+      alpha      = Alpha value in 0 to 1.0f (opacity).
 */
-Color hsl(float hueDegrees, 
-          float sat, 
-          float light, 
+Color hsl(float hueDegrees,
+          float sat,
+          float light,
           float alpha = 1.0f)
 {
     // TODO: should clamp or fmod hueDegrees here?
@@ -208,14 +208,14 @@ Color hsl(float hueDegrees,
 }
 
 
-/** 
-    In CSS, the `hsla` function is simply in alias of `rgb`. You can 
+/**
+    In CSS, the `hsla` function is simply in alias of `rgb`. You can
     specify an alpha to `rgb`, or omit it with `rgba`.
 */
 alias hsla = hsl;
 
 
-/** 
+/**
     Convert a `Color` in-place to another colorspace.
 */
 Color toColorSpace(const(Color) color, Colorspace target)
@@ -226,9 +226,9 @@ Color toColorSpace(const(Color) color, Colorspace target)
 
     if (target == Colorspace.unknown)
     {
-        // Not supposed to happen, every Color are convertible to any 
+        // Not supposed to happen, every Color are convertible to any
         // other space (though the semantics could change).
-        assert(false); 
+        assert(false);
     }
 
     if (from == target)
