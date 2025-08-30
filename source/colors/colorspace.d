@@ -8,8 +8,6 @@
 module colors.colorspace;
 
 
-// Question: is this supposed to supersede Gamut PixelType?
-
 /** 
     The Predefined Color Spaces. For now, no custom space.
 */
